@@ -547,7 +547,7 @@
     }
   });
 
-  // Botão Processar Domínio (Flexível para qualquer CSV/Excel)
+  // Botão Processar Domínio (Filtra IDs gigantes e CNPJs)
   btnProcessarDominio.addEventListener('click', function(){
     var file = fileDominio.files[0];
     if(!file){
@@ -570,7 +570,8 @@
             if(cell !== null && cell !== undefined) {
               let cleanStr = String(cell).replace(/\./g, '').replace(',', '.').trim();
               let num = parseFloat(cleanStr);
-              if(!isNaN(num) && num > 0 && num < 10000000) {
+              // Ignora números grandes demais (IDs, CNPJs, códigos) -> aceita só até 1.000.000 por valor individual
+              if(!isNaN(num) && num > 0 && num < 1000000) {
                 somaValores += num;
                 qtdValores++;
               }
@@ -579,12 +580,11 @@
         });
 
         if(somaValores > 0) {
-          // Se encontrou muitos valores, pega o maior ou o total estimado
-          inpReceita.value = Math.round(somaValores / (qtdValores > 10 ? 2 : 1));
+          inpReceita.value = Math.round(somaValores / (qtdValores > 15 ? 2 : 1));
           inpImpostos.value = Math.round(parseFloat(inpReceita.value) * 0.10);
           statusDominio.textContent = '✔ Arquivo processado com sucesso!';
         } else {
-          statusDominio.textContent = '⚠️ Nenhum valor numérico detectado. Preencha manualmente.';
+          statusDominio.textContent = '⚠️ Nenhum valor numérico válido detectado. Preencha manualmente.';
         }
         calcularDRE();
       } catch (err) {
@@ -612,7 +612,7 @@
     }
   });
 
-  // Botão Processar Extrato (Flexível para qualquer CSV/Excel de banco)
+  // Botão Processar Extrato (Filtra IDs e considera D/C se houver, ignorando números gigantes)
   btnProcessarExtrato.addEventListener('click', function(){
     var file = fileExtrato.files[0];
     if(!file){
@@ -628,28 +628,32 @@
         var rows = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
         
         let somaDespesas = 0;
-        let valoresNegativos = 0;
-        let todosValores = [];
+        let valoresValidos = [];
 
         rows.forEach(row => {
+          let rowText = row.join(' ').toLowerCase();
+          // Verifica se a linha indica débito ou pagamento (opcional, mas ajuda a refinar)
+          let isDebitRow = rowText.includes('d') || rowText.includes('deb') || rowText.includes('pg') || rowText.includes('pagamento') || !rowText.includes('c');
+          
           row.forEach(cell => {
             if(cell !== null && cell !== undefined) {
               let cleanStr = String(cell).replace(/\./g, '').replace(',', '.').trim();
               let num = parseFloat(cleanStr);
-              if(!isNaN(num) && num !== 0) {
-                todosValores.push(num);
+              // Filtra estritamente: ignora IDs, códigos de barras e números gigantes (> 500.000 por lançamento)
+              if(!isNaN(num) && num !== 0 && Math.abs(num) < 500000) {
                 if(num < 0) {
                   somaDespesas += Math.abs(num);
-                  valoresNegativos++;
+                } else {
+                  valoresValidos.push(num);
                 }
               }
             }
           });
         });
 
-        // Se o extrato vier sem sinal negativo (valores positivos na coluna de saída), soma todos os valores numéricos encontrados
-        if(somaDespesas === 0 && todosValores.length > 0) {
-          somaDespesas = todosValores.reduce((acc, curr) => acc + Math.abs(curr), 0);
+        // Se os valores vieram todos positivos (sem sinal negativo), soma as transações válidas do extrato
+        if(somaDespesas === 0 && valoresValidos.length > 0) {
+          somaDespesas = valoresValidos.reduce((acc, curr) => acc + curr, 0);
         }
 
         if(somaDespesas > 0) {
@@ -659,7 +663,7 @@
           inpDespFixas.value = fixShare;
           statusExtrato.textContent = '✔ Extrato processado e despesas distribuídas!';
         } else {
-          statusExtrato.textContent = '⚠️ Nenhuma despesa detectada. Ajuste manualmente.';
+          statusExtrato.textContent = '⚠️ Nenhuma despesa válida detectada. Ajuste manualmente.';
         }
         calcularDRE();
       } catch (err) {
