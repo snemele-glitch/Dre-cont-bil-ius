@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Diagnóstico e Simulação de DRE | IUS Contabilidade</title>
+<title>Diagnóstico, Construtor e Simulador de DRE | IUS Contabilidade</title>
 <style>
   :root{
     --navy:#15326C;
@@ -61,61 +61,45 @@
     letter-spacing:.16em;
     text-transform:uppercase;
     color:var(--teal);
-    margin:0 0 18px;
+    margin:0 0 14px;
   }
   h1,h2{
     font-family:var(--serif);
     color:var(--navy);
-    margin:0 0 18px;
+    margin:0 0 14px;
     line-height:1.12;
   }
-  h1{ font-size:clamp(34px,5.4vw,58px); font-weight:400; }
-  h2{ font-size:clamp(26px,3.6vw,38px); font-weight:400; }
-  p{ font-size:17px; line-height:1.65; color:var(--ink-soft); margin:0 0 16px; }
-  .lede{ font-size:19px; color:var(--ink); max-width:640px; }
+  h1{ font-size:clamp(32px,5.2vw,54px); font-weight:400; }
+  h2{ font-size:clamp(24px,3.4vw,36px); font-weight:400; }
+  p{ font-size:16px; line-height:1.6; color:var(--ink-soft); margin:0 0 14px; }
+  .lede{ font-size:18px; color:var(--ink); max-width:640px; }
 
   /* ---------- Page nav dots ---------- */
   .pagenav{
-    position:fixed;
-    right:22px;
-    top:50%;
-    transform:translateY(-50%);
-    z-index:50;
-    display:flex;
-    flex-direction:column;
-    gap:14px;
+    position:fixed; right:22px; top:50%; transform:translateY(-50%);
+    z-index:50; display:flex; flex-direction:column; gap:12px;
   }
   .pagenav button{
     width:9px; height:9px; border-radius:50%;
-    border:1.5px solid var(--navy);
-    background:transparent;
-    cursor:pointer;
-    padding:0;
-    opacity:.5;
+    border:1.5px solid var(--navy); background:transparent;
+    cursor:pointer; padding:0; opacity:.5;
     transition:opacity .25s, background .25s, transform .25s;
   }
   .pagenav button.active{ opacity:1; background:var(--teal); border-color:var(--teal); transform:scale(1.3); }
   .pagecounter{
     position:fixed; left:22px; bottom:20px; z-index:50;
     font-size:12px; letter-spacing:.08em; color:var(--ink-soft);
-    font-family:var(--sans);
   }
   .pagecounter b{ color:var(--navy); }
   @media (max-width:720px){
-    .pagenav{ right:12px; gap:10px; }
+    .pagenav{ right:10px; gap:8px; }
     .pagecounter{ left:12px; bottom:12px; font-size:10px; }
-    .page{ padding:64px 6vw 90px; }
+    .page{ padding:60px 5vw 80px; }
   }
 
   .scrolldown{
-    margin-top:44px;
-    display:inline-flex;
-    align-items:center;
-    gap:8px;
-    font-size:12px;
-    letter-spacing:.1em;
-    text-transform:uppercase;
-    color:var(--teal-light);
+    margin-top:34px; display:inline-flex; align-items:center; gap:8px;
+    font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--teal-light);
     animation:bob 2s ease-in-out infinite;
   }
   @keyframes bob{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(6px);} }
@@ -130,199 +114,140 @@
   #cover h1 em{ font-style:italic; color:var(--teal-light); }
   #cover .lede{ color:#D8E7ED; }
   .cover-tag{
-    display:inline-block;
-    margin-top:36px;
-    padding:9px 18px;
-    border:1px solid rgba(255,255,255,.28);
-    border-radius:2px;
-    font-size:13px;
-    color:#EAF3F6;
-    letter-spacing:.02em;
+    display:inline-block; margin-top:28px; padding:8px 16px;
+    border:1px solid rgba(255,255,255,.28); border-radius:2px;
+    font-size:13px; color:#EAF3F6; letter-spacing:.02em;
   }
 
   /* ---------- DIAGNÓSTICO ---------- */
-  .diag-list{ margin-top:8px; }
+  .diag-list{ margin-top:4px; }
   .diag-item{
-    display:flex;
-    align-items:flex-start;
-    gap:16px;
-    padding:18px 0;
-    border-bottom:1px solid var(--line);
-    cursor:pointer;
+    display:flex; align-items:flex-start; gap:14px;
+    padding:14px 0; border-bottom:1px solid var(--line); cursor:pointer;
   }
   .diag-item:first-child{ border-top:1px solid var(--line); }
-  .diag-num{
-    font-family:var(--serif);
-    font-size:15px;
-    color:var(--teal);
-    min-width:22px;
-    padding-top:2px;
-  }
+  .diag-num{ font-family:var(--serif); font-size:14px; color:var(--teal); min-width:20px; padding-top:1px; }
   .diag-check{
-    width:22px; height:22px; border-radius:50%;
-    border:2px solid var(--navy);
-    flex:0 0 22px;
-    margin-top:1px;
-    position:relative;
+    width:20px; height:20px; border-radius:50%; border:2px solid var(--navy);
+    flex:0 0 20px; margin-top:1px; position:relative;
     transition:background .2s, border-color .2s;
   }
   .diag-check::after{
-    content:"";
-    position:absolute; left:6px; top:2px;
-    width:6px; height:11px;
-    border:solid #fff; border-width:0 2px 2px 0;
-    transform:rotate(45deg);
-    opacity:0;
-    transition:opacity .15s;
+    content:""; position:absolute; left:5px; top:1px;
+    width:5px; height:10px; border:solid #fff; border-width:0 2px 2px 0;
+    transform:rotate(45deg); opacity:0; transition:opacity .15s;
   }
-  input:checked ~ .diag-check{ background:var(--teal); border-color:var(--teal); }
-  input:checked ~ .diag-check::after{ opacity:1; }
-  input{ position:absolute; opacity:0; width:0; height:0; }
-  .diag-text{ font-size:16.5px; color:var(--ink); line-height:1.5; }
+  input[type="checkbox"]:checked ~ .diag-check{ background:var(--teal); border-color:var(--teal); }
+  input[type="checkbox"]:checked ~ .diag-check::after{ opacity:1; }
+  input[type="checkbox"]{ position:absolute; opacity:0; width:0; height:0; }
+  .diag-text{ font-size:15.5px; color:var(--ink); line-height:1.45; }
 
   .diag-result{
-    margin-top:30px;
-    padding:24px 26px;
-    border-radius:4px;
-    border-left:4px solid var(--line);
-    background:var(--paper-warm);
+    margin-top:20px; padding:18px 22px; border-radius:4px;
+    border-left:4px solid var(--line); background:var(--paper-warm);
     transition:background .3s, border-color .3s;
   }
-  .diag-result .r-title{ font-weight:700; font-size:15px; margin-bottom:6px; }
-  .diag-result .r-body{ font-size:15px; color:var(--ink-soft); line-height:1.55; }
+  .diag-result .r-title{ font-weight:700; font-size:14.5px; margin-bottom:4px; }
+  .diag-result .r-body{ font-size:14px; color:var(--ink-soft); line-height:1.5; }
   .diag-result.risk{ background:var(--risk-bg); border-color:var(--risk); }
   .diag-result.risk .r-title{ color:var(--risk); }
   .diag-result.mid{ background:var(--amber-bg); border-color:var(--amber); }
   .diag-result.mid .r-title{ color:var(--amber); }
   .diag-result.ok{ background:var(--ok-bg); border-color:var(--ok); }
   .diag-result.ok .r-title{ color:var(--ok); }
-  .diag-score{ font-family:var(--serif); font-size:14px; color:var(--ink-soft); margin-top:14px;}
-  .diag-score b{ color:var(--navy); font-size:16px; }
+  .diag-score{ font-family:var(--serif); font-size:13.5px; color:var(--ink-soft); margin-top:10px;}
+  .diag-score b{ color:var(--navy); font-size:15px; }
 
-  /* ---------- SIMULADOR ---------- */
-  #simulador{ background:var(--paper-warm); }
-  .tier-row{ display:flex; gap:10px; flex-wrap:wrap; margin:8px 0 34px; }
-  .tier-btn{
-    font-family:var(--sans);
+  /* ---------- CONSTRUTOR DE DRE (NOVO) ---------- */
+  #construtor{ background:var(--paper-warm); }
+  .builder-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:30px; align-items:start;
+  }
+  @media (max-width:850px){ .builder-grid{ grid-template-columns:1fr; } }
+
+  .input-card{
+    background:#fff; border:1px solid var(--line); border-radius:6px; padding:22px;
+  }
+  .input-card h3{
+    font-family:var(--serif); font-size:18px; color:var(--navy); margin-top:0; margin-bottom:14px;
+  }
+  .field-group{ margin-bottom:14px; }
+  .field-group label{
+    display:block; font-size:12.5px; font-weight:700; text-transform:uppercase;
+    letter-spacing:.05em; color:var(--ink-soft); margin-bottom:5px;
+  }
+  .field-group input{
+    width:100%; padding:10px 14px; border:1px solid var(--line); border-radius:4px;
+    font-size:15px; font-family:var(--sans); color:var(--navy); background:var(--paper);
+    transition:border-color .2s, background .2s;
+  }
+  .field-group input:focus{
+    outline:none; border-color:var(--teal); background:#fff;
+  }
+
+  .dre-output{
+    background:var(--navy); color:#fff; border-radius:6px; padding:24px;
+  }
+  .dre-output h3{
+    font-family:var(--serif); font-size:18px; color:var(--teal-light); margin-top:0; margin-bottom:16px;
+    border-bottom:1px solid rgba(255,255,255,.15); padding-bottom:10px;
+  }
+  .dre-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:8px 0; border-bottom:1px solid rgba(255,255,255,.08);
     font-size:14px;
-    padding:11px 20px;
-    border-radius:999px;
-    border:1.5px solid var(--navy);
-    background:transparent;
-    color:var(--navy);
-    cursor:pointer;
-    transition:.2s;
   }
-  .tier-btn.active, .tier-btn:hover{ background:var(--navy); color:#fff; }
-
-  .sim-grid{
-    display:grid;
-    grid-template-columns:1.35fr 1fr;
-    gap:40px;
-    align-items:start;
+  .dre-row.total{
+    border-top:1.5px solid var(--teal-light); border-bottom:none;
+    margin-top:10px; padding-top:12px; font-weight:700; font-size:16px; color:#fff;
   }
-  @media (max-width:820px){ .sim-grid{ grid-template-columns:1fr; } }
-
-  .bar-block{ margin-bottom:26px; }
-  .bar-label{ display:flex; justify-content:space-between; font-size:13.5px; color:var(--ink-soft); margin-bottom:8px; }
-  .bar-label b{ color:var(--navy); font-family:var(--serif); font-size:17px; }
-  .bar-track{ height:14px; background:#E3EAEE; border-radius:8px; overflow:hidden; }
-  .bar-fill{ height:100%; border-radius:8px; transition:width .7s cubic-bezier(.4,0,.2,1); }
-  .bar-fill.before{ background:#9AA9B4; }
-  .bar-fill.after{ background:linear-gradient(90deg, var(--teal), var(--teal-light)); }
-
-  .save-cards{ display:flex; flex-direction:column; gap:16px; }
-  .save-card{
-    background:var(--navy);
-    color:#fff;
-    padding:22px 24px;
-    border-radius:6px;
-  }
-  .save-card .s-label{ font-size:12.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--teal-light); margin-bottom:8px; }
-  .save-card .s-value{ font-family:var(--serif); font-size:32px; }
-  .save-card.alt{ background:var(--teal); }
-  .save-card.alt .s-label{ color:#EAF7FA; }
-  .premises{ font-size:12.5px; color:var(--ink-soft); margin-top:22px; line-height:1.6; }
+  .dre-row span:last-child{ font-family:var(--serif); font-size:16px; }
+  .dre-row.total span:last-child{ font-size:19px; color:var(--teal-light); }
 
   /* ---------- PILARES ---------- */
-  .pillar-grid{ display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-top:10px; }
+  .pillar-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:6px; }
   @media (max-width:720px){ .pillar-grid{ grid-template-columns:1fr; } }
-  .pillar{
-    perspective:1400px;
-    height:210px;
-    cursor:pointer;
-  }
+  .pillar{ perspective:1400px; height:190px; cursor:pointer; }
   .pillar-inner{
-    position:relative;
-    width:100%; height:100%;
-    transition:transform .6s cubic-bezier(.4,0,.2,1);
-    transform-style:preserve-3d;
+    position:relative; width:100%; height:100%;
+    transition:transform .6s cubic-bezier(.4,0,.2,1); transform-style:preserve-3d;
   }
   .pillar.flip .pillar-inner{ transform:rotateY(180deg); }
   .pillar-face{
-    position:absolute; inset:0;
-    backface-visibility:hidden;
-    border-radius:6px;
-    padding:24px;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
+    position:absolute; inset:0; backface-visibility:hidden;
+    border-radius:6px; padding:20px; display:flex; flex-direction:column; justify-content:center;
   }
-  .pillar-front{
-    background:#fff;
-    border:1px solid var(--line);
-  }
-  .pillar-front .p-eyebrow{ font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--teal); margin-bottom:10px; }
-  .pillar-front .p-name{ font-family:var(--serif); font-size:23px; color:var(--navy); }
-  .pillar-front .p-hint{ margin-top:auto; font-size:12.5px; color:var(--ink-soft); }
-  .pillar-back{
-    background:var(--navy);
-    color:#EAF3F6;
-    transform:rotateY(180deg);
-    font-size:14.5px;
-    line-height:1.55;
-  }
+  .pillar-front{ background:#fff; border:1px solid var(--line); }
+  .pillar-front .p-eyebrow{ font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--teal); margin-bottom:8px; }
+  .pillar-front .p-name{ font-family:var(--serif); font-size:21px; color:var(--navy); }
+  .pillar-front .p-hint{ margin-top:auto; font-size:12px; color:var(--ink-soft); }
+  .pillar-back{ background:var(--navy); color:#EAF3F6; transform:rotateY(180deg); font-size:14px; line-height:1.5; }
 
   /* ---------- MATRIZ ---------- */
-  .matrix-wrap{ overflow-x:auto; margin-top:10px; border:1px solid var(--line); border-radius:6px; }
-  table{ width:100%; border-collapse:collapse; font-size:14.5px; min-width:640px; }
+  .matrix-wrap{ overflow-x:auto; margin-top:6px; border:1px solid var(--line); border-radius:6px; }
+  table{ width:100%; border-collapse:collapse; font-size:14px; min-width:620px; }
   thead th{
-    text-align:left;
-    background:var(--navy);
-    color:#fff;
-    padding:14px 18px;
-    font-weight:600;
-    font-size:13px;
-    letter-spacing:.03em;
+    text-align:left; background:var(--navy); color:#fff;
+    padding:12px 16px; font-weight:600; font-size:12.5px; letter-spacing:.03em;
   }
   thead th:first-child{ color:var(--teal-light); }
-  tbody td{ padding:14px 18px; border-top:1px solid var(--line); color:var(--ink); vertical-align:top; }
+  tbody td{ padding:12px 16px; border-top:1px solid var(--line); color:var(--ink); vertical-align:top; }
   tbody tr:nth-child(odd){ background:var(--paper-warm); }
-  tbody td:first-child{ color:var(--ink-soft); font-size:13px; font-weight:600; white-space:nowrap; }
+  tbody td:first-child{ color:var(--ink-soft); font-size:12.5px; font-weight:600; white-space:nowrap; }
 
   /* ---------- CTA ---------- */
   #cta{ background:linear-gradient(160deg, var(--navy) 0%, var(--navy-dark) 100%); color:#fff; }
   #cta .kicker{ color:var(--teal-light); }
   #cta h2{ color:#fff; }
   .cta-btn{
-    display:inline-block;
-    margin-top:28px;
-    background:var(--teal);
-    color:#fff;
-    text-decoration:none;
-    padding:17px 34px;
-    border-radius:3px;
-    font-size:16px;
-    font-weight:600;
-    letter-spacing:.01em;
-    border:none;
-    cursor:pointer;
-    transition:background .2s, transform .2s;
+    display:inline-block; margin-top:24px; background:var(--teal); color:#fff;
+    text-decoration:none; padding:15px 30px; border-radius:3px; font-size:15px;
+    font-weight:600; border:none; cursor:pointer; transition:background .2s, transform .2s;
   }
   .cta-btn:hover{ background:var(--teal-light); transform:translateY(-1px); }
-  .cta-note{ margin-top:20px; max-width:560px; color:#C6D7DF; font-size:14.5px; }
-  .cta-foot{ margin-top:56px; font-size:12.5px; color:#9DB4C0; border-top:1px solid rgba(255,255,255,.15); padding-top:18px; }
-  .signature{ font-family:var(--serif); font-style:italic; color:var(--teal-light); margin-top:6px; font-size:15px; }
+  .cta-note{ margin-top:16px; max-width:540px; color:#C6D7DF; font-size:14px; }
+  .cta-foot{ margin-top:40px; font-size:12px; color:#9DB4C0; border-top:1px solid rgba(255,255,255,.15); padding-top:14px; }
+  .signature{ font-family:var(--serif); font-style:italic; color:var(--teal-light); margin-top:4px; font-size:14px; }
 </style>
 </head>
 <body>
@@ -335,10 +260,10 @@
   <!-- CAPA -->
   <section class="page" id="cover" data-title="Capa">
     <div class="page-inner">
-      <p class="kicker">IUS Contabilidade · Guia interativo</p>
-      <h1>Domínio da DRE:<br><em>transformando números em margem, caixa e lucro real.</em></h1>
-      <p class="lede">Um guia prático sobre a Demonstração do Resultado do Exercício, separação de custos, margem de contribuição e gestão baseada em dados — com diagnóstico e simulador de lucratividade.</p>
-      <span class="cover-tag">6 páginas · leitura de ~8 minutos</span>
+      <p class="kicker">IUS Contabilidade · Guia Interativo & Simulador</p>
+      <h1>Domínio da DRE:<br><em>Insira seus dados, calcule margens e gere seu resultado real.</em></h1>
+      <p class="lede">Ferramenta interativa completa com diagnóstico gerencial, construtor de DRE personalizado com seus próprios valores, pilares estratégicos e estrutura contábil.</p>
+      <span class="cover-tag">6 páginas interativas</span>
       <div class="scrolldown">role para começar ↓</div>
     </div>
   </section>
@@ -366,39 +291,45 @@
     </div>
   </section>
 
-  <!-- SIMULADOR -->
-  <section class="page" id="simulador" data-title="Simulador">
+  <!-- CONSTRUTOR DE DRE PERSONALIZADA (NOVO) -->
+  <section class="page" id="construtor" data-title="Construtor de DRE">
     <div class="page-inner">
-      <p class="kicker">Página 3 · Simulador de impacto na DRE</p>
-      <h2>Quanto ganha o lucro líquido com otimização de margem?</h2>
-      <p>Compare o lucro atual com um cenário de ganho de 5% de eficiência operacional e redução de custos. Selecione o faturamento base.</p>
+      <p class="kicker">Página 3 · Construtor de DRE Personalizada</p>
+      <h2>Insira os valores da sua empresa</h2>
+      <p>Altere os campos abaixo com os números reais do seu negócio para gerar instantaneamente a sua DRE gerencial e verificar margens e lucros.</p>
 
-      <div class="tier-row" id="tierRow">
-        <button class="tier-btn" data-tier="50000">R$ 50.000/mês</button>
-        <button class="tier-btn" data-tier="100000">R$ 100.000/mês</button>
-        <button class="tier-btn" data-tier="250000">R$ 250.000/mês</button>
-      </div>
-
-      <div class="sim-grid">
-        <div>
-          <div class="bar-block">
-            <div class="bar-label"><span>Lucro Líquido Atual (12% margem)</span><b id="valBefore">—</b></div>
-            <div class="bar-track"><div class="bar-fill before" id="barBefore" style="width:0%"></div></div>
+      <div class="builder-grid">
+        <div class="input-card">
+          <h3>Parâmetros de Entrada</h3>
+          <div class="field-group">
+            <label for="inpReceita">Receita Bruta (Faturamento Mensal)</label>
+            <input type="number" id="inpReceita" value="100000" step="1000">
           </div>
-          <div class="bar-block">
-            <div class="bar-label"><span>Lucro Otimizado (18% margem)</span><b id="valAfter">—</b></div>
-            <div class="bar-track"><div class="bar-fill after" id="barAfter" style="width:0%"></div></div>
+          <div class="field-group">
+            <label for="inpImpostos">(-) Impostos e Deduções sobre Vendas (R$)</label>
+            <input type="number" id="inpImpostos" value="10000" step="500">
           </div>
-          <div class="premises">Premissas: Simulação baseada em ganho de eficiência por corte de despesas supérfluas e melhoria na composição da Margem de Contribuição. Valores ilustrativos adaptados à realidade gerencial.</div>
+          <div class="field-group">
+            <label for="inpCustoVar">(-) Custos Variáveis / CMV (R$)</label>
+            <input type="number" id="inpCustoVar" value="35000" step="1000">
+          </div>
+          <div class="field-group">
+            <label for="inpDespFixas">(-) Despesas Fixas / Operacionais (R$)</label>
+            <input type="number" id="inpDespFixas" value="40000" step="1000">
+          </div>
         </div>
-        <div class="save-cards">
-          <div class="save-card">
-            <div class="s-label">Incremento Anual no Lucro</div>
-            <div class="s-value" id="saveAnual">R$ 0</div>
-          </div>
-          <div class="save-card alt">
-            <div class="s-label">Novo Retorno sobre Receita</div>
-            <div class="s-value" id="novoRoi">18%</div>
+
+        <div class="dre-output">
+          <h3>DRE Gerencial Calculada</h3>
+          <div class="dre-row"><span>Receita Bruta</span><span id="outReceita">R$ 100.000,00</span></div>
+          <div class="dre-row"><span>(-) Deduções / Impostos</span><span id="outImpostos">R$ 10.000,00</span></div>
+          <div class="dre-row"><span>(=) Receita Líquida</span><span id="outRecLiq">R$ 90.000,00</span></div>
+          <div class="dre-row"><span>(-) Custos Variáveis</span><span id="outCustoVar">R$ 35.000,00</span></div>
+          <div class="dre-row total"><span>(=) Margem de Contribuição</span><span id="outMargemCont">R$ 55.000,00</span></div>
+          <div class="dre-row"><span>(-) Despesas Fixas</span><span id="outDespFixas">R$ 40.000,00</span></div>
+          <div class="dre-row total"><span>(=) Lucro Líquido</span><span id="outLucroLiq">R$ 15.000,00</span></div>
+          <div class="dre-row" style="margin-top:10px; border-top:1px dashed rgba(255,255,255,.2); padding-top:10px;">
+            <span>Margem Líquida %</span><span id="outMargemLiqPct" style="color:var(--teal-light)">15.00%</span>
           </div>
         </div>
       </div>
@@ -566,41 +497,50 @@
   }
   inputs.forEach(function(i){ i.addEventListener('change', updateDiag); });
 
-  // ---- Simulador ----
-  var tierData = {
-    "50000":  { before: 6000,  after: 9000,   anual: 36000 },
-    "100000": { before: 12000, after: 18000,  anual: 72000 },
-    "250000": { before: 30000, after: 45000,  anual: 180000 }
-  };
-  var maxBefore = 30000;
-  var tierBtns = Array.prototype.slice.call(document.querySelectorAll('.tier-btn'));
-  var barBefore = document.getElementById('barBefore');
-  var barAfter = document.getElementById('barAfter');
-  var valBefore = document.getElementById('valBefore');
-  var valAfter = document.getElementById('valAfter');
-  var saveAnual = document.getElementById('saveAnual');
+  // ---- Construtor de DRE Personalizada ----
+  var inpReceita = document.getElementById('inpReceita');
+  var inpImpostos = document.getElementById('inpImpostos');
+  var inpCustoVar = document.getElementById('inpCustoVar');
+  var inpDespFixas = document.getElementById('inpDespFixas');
 
-  function fmt(n){
-    return 'R$ ' + n.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
+  var outReceita = document.getElementById('outReceita');
+  var outImpostos = document.getElementById('outImpostos');
+  var outRecLiq = document.getElementById('outRecLiq');
+  var outCustoVar = document.getElementById('outCustoVar');
+  var outMargemCont = document.getElementById('outMargemCont');
+  var outDespFixas = document.getElementById('outDespFixas');
+  var outLucroLiq = document.getElementById('outLucroLiq');
+  var outMargemLiqPct = document.getElementById('outMargemLiqPct');
+
+  function fmtBRL(val){
+    return 'R$ ' + val.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
   }
-  function fmt0(n){
-    return 'R$ ' + n.toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0});
+
+  function calcularDRE(){
+    var receita = parseFloat(inpReceita.value) || 0;
+    var impostos = parseFloat(inpImpostos.value) || 0;
+    var custoVar = parseFloat(inpCustoVar.value) || 0;
+    var despFixas = parseFloat(inpDespFixas.value) || 0;
+
+    var recLiq = receita - impostos;
+    var margemCont = recLiq - custoVar;
+    var lucroLiq = margemCont - despFixas;
+    var margemLiqPct = receita > 0 ? (lucroLiq / receita) * 100 : 0;
+
+    outReceita.textContent = fmtBRL(receita);
+    outImpostos.textContent = fmtBRL(impostos);
+    outRecLiq.textContent = fmtBRL(recLiq);
+    outCustoVar.textContent = fmtBRL(custoVar);
+    outMargemCont.textContent = fmtBRL(margemCont);
+    outDespFixas.textContent = fmtBRL(despFixas);
+    outLucroLiq.textContent = fmtBRL(lucroLiq);
+    outMargemLiqPct.textContent = margemLiqPct.toFixed(2) + '%';
   }
-  function applyTier(tier){
-    var d = tierData[tier];
-    tierBtns.forEach(function(b){ b.classList.toggle('active', b.dataset.tier === tier); });
-    valBefore.textContent = fmt(d.before) + ' /mês';
-    valAfter.textContent = fmt(d.after) + ' /mês';
-    requestAnimationFrame(function(){
-      barBefore.style.width = (d.before/maxBefore*100) + '%';
-      barAfter.style.width = (d.after/maxBefore*100) + '%';
-    });
-    saveAnual.textContent = fmt0(d.anual);
-  }
-  tierBtns.forEach(function(b){
-    b.addEventListener('click', function(){ applyTier(b.dataset.tier); });
+
+  [inpReceita, inpImpostos, inpCustoVar, inpDespFixas].forEach(function(el){
+    el.addEventListener('input', calcularDRE);
   });
-  applyTier("100000");
+  calcularDRE();
 
   // ---- Pilares ----
   document.querySelectorAll('.pillar').forEach(function(p){
@@ -611,7 +551,7 @@
   document.getElementById('ctaButton').addEventListener('click', function(e){
     e.preventDefault();
     var el = document.getElementById('ctaButton');
-    el.textContent = 'Substitua este botão pelo seu link de agendamento / WhatsApp';
+    el.textContent = 'Solicitação registrada com sucesso!';
     el.style.background = 'var(--teal-light)';
   });
 })();
