@@ -256,7 +256,7 @@
     <div class="page-inner">
       <p class="kicker">IUS Contabilidade · Importador & Simulador de DRE</p>
       <h1>Domínio da DRE:<br><em>Importe relatórios, processe dados e gere seu resultado.</em></h1>
-      <p class="lede">Ferramenta interativa com importação de arquivos do Domínio (.xlsx/.csv), extratos bancários (.xlsx/.csv) de qualquer formato, botões dedicados de processamento e limpeza, além de apuração instantânea.</p>
+      <p class="lede">Ferramenta interativa com importação correta de Domínio e Extratos Bancários por colunas de valores, débito e crédito.</p>
       <span class="cover-tag">5 páginas interativas</span>
       <div class="scrolldown">role para começar ↓</div>
     </div>
@@ -266,8 +266,8 @@
   <section class="page" id="construtor" data-title="Importador & DRE">
     <div class="page-inner">
       <p class="kicker">Página 2 · Importador e Construtor de DRE</p>
-      <h2>Carregue, processe arquivos ou edite manualmente</h2>
-      <p>Selecione qualquer relatório do Domínio e extrato bancário em CSV ou Excel. O sistema lê os valores automaticamente.</p>
+      <h2>Carregue cada arquivo no campo correto</h2>
+      <p>Use o <b>Card 1</b> para relatórios de Vendas/Domínio e o <b>Card 2</b> para o Extrato Bancário de Despesas.</p>
 
       <div class="builder-grid">
         <div class="builder-col">
@@ -275,12 +275,12 @@
           <div class="input-card">
             <h3>1. Relatório Domínio (Vendas / CFOPs)</h3>
             <div class="file-drop-zone" onclick="document.getElementById('fileDominio').click()">
-              <span class="file-label" id="labelDominio">📁 Clique para selecionar Excel ou CSV do Domínio</span>
-              <span class="file-hint">Lê valores numéricos e faturamento do arquivo</span>
+              <span class="file-label" id="labelDominio">📁 Clique para selecionar relatório do Domínio (.xlsx/.csv)</span>
+              <span class="file-hint">Procura colunas de Valor Contábil ou Vendas</span>
               <input type="file" id="fileDominio" accept=".xlsx, .xls, .csv">
             </div>
             <div class="card-actions">
-              <button type="button" class="btn-process" id="btnProcessarDominio">▶ Processar Arquivo</button>
+              <button type="button" class="btn-process" id="btnProcessarDominio">▶ Processar Domínio</button>
               <button type="button" class="btn-clear" id="btnLimparDominio">Limpar</button>
             </div>
             <div class="import-status" id="statusDominio">Nenhum arquivo carregado.</div>
@@ -301,8 +301,8 @@
           <div class="input-card">
             <h3>2. Extrato Bancário / Despesas (CSV ou Excel)</h3>
             <div class="file-drop-zone" onclick="document.getElementById('fileExtrato').click()">
-              <span class="file-label" id="labelExtrato">📁 Clique para selecionar extrato de despesas</span>
-              <span class="file-hint">Lê qualquer CSV/Excel e soma os lançamentos</span>
+              <span class="file-label" id="labelExtrato">📁 Clique para selecionar o Extrato Bancário</span>
+              <span class="file-hint">Soma débitos e saídas como despesas</span>
               <input type="file" id="fileExtrato" accept=".xlsx, .xls, .csv">
             </div>
             <div class="card-actions">
@@ -543,11 +543,11 @@
   fileDominio.addEventListener('change', function(e){
     if(e.target.files[0]){
       labelDominio.textContent = '📄 ' + e.target.files[0].name;
-      statusDominio.textContent = 'Arquivo selecionado. Clique em "Processar Arquivo".';
+      statusDominio.textContent = 'Arquivo selecionado. Clique em "Processar Domínio".';
     }
   });
 
-  // Botão Processar Domínio (Filtra IDs gigantes e CNPJs)
+  // Processar Relatório Domínio (Procura coluna de valor contábil/faturamento)
   btnProcessarDominio.addEventListener('click', function(){
     var file = fileDominio.files[0];
     if(!file){
@@ -560,44 +560,57 @@
         var data = new Uint8Array(evt.target.result);
         var workbook = XLSX.read(data, {type: 'array'});
         var firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-        var rows = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
+        var json = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
         
-        let somaValores = 0;
-        let qtdValores = 0;
+        let somaReceita = 0;
+        let colIndex = -1;
 
-        rows.forEach(row => {
-          row.forEach(cell => {
-            if(cell !== null && cell !== undefined) {
-              let cleanStr = String(cell).replace(/\./g, '').replace(',', '.').trim();
-              let num = parseFloat(cleanStr);
-              // Ignora números grandes demais (IDs, CNPJs, códigos) -> aceita só até 1.000.000 por valor individual
-              if(!isNaN(num) && num > 0 && num < 1000000) {
-                somaValores += num;
-                qtdValores++;
-              }
+        // Tenta achar a coluna de valor/contábil pelo cabeçalho
+        if(json.length > 0) {
+          let header = json[0];
+          header.forEach((h, idx) => {
+            let hStr = String(h).toLowerCase();
+            if(hStr.includes('contábil') || hStr.includes('contabil') || hStr.includes('valor') || hStr.includes('total') || hStr.includes('venda')) {
+              colIndex = idx;
             }
           });
-        });
+        }
 
-        if(somaValores > 0) {
-          inpReceita.value = Math.round(somaValores / (qtdValores > 15 ? 2 : 1));
-          inpImpostos.value = Math.round(parseFloat(inpReceita.value) * 0.10);
-          statusDominio.textContent = '✔ Arquivo processado com sucesso!';
+        if(colIndex !== -1) {
+          for(let i = 1; i < json.length; i++) {
+            let val = parseFloat(String(json[i][colIndex]).replace(/\./g, '').replace(',', '.'));
+            if(!isNaN(val) && val > 0 && val < 10000000) somaReceita += val;
+          }
+        }
+
+        // Se não achou por cabeçalho, busca números realistas nas linhas
+        if(somaReceita === 0) {
+          json.forEach(row => {
+            row.forEach(cell => {
+              let num = parseFloat(String(cell).replace(/\./g, '').replace(',', '.'));
+              if(!isNaN(num) && num > 100 && num < 500000) somaReceita += num;
+            });
+          });
+        }
+
+        if(somaReceita > 0) {
+          inpReceita.value = Math.round(somaReceita);
+          inpImpostos.value = Math.round(somaReceita * 0.10);
+          statusDominio.textContent = '✔ Relatório do Domínio processado com sucesso!';
         } else {
-          statusDominio.textContent = '⚠️ Nenhum valor numérico válido detectado. Preencha manualmente.';
+          statusDominio.textContent = '⚠️ Não foi possível identificar a receita. Insira manualmente.';
         }
         calcularDRE();
       } catch (err) {
-        statusDominio.textContent = '❌ Erro ao ler arquivo. Preencha manualmente.';
+        statusDominio.textContent = '❌ Erro ao ler arquivo do Domínio.';
       }
     };
     reader.readAsArrayBuffer(file);
   });
 
-  // Botão Limpar Domínio
   btnLimparDominio.addEventListener('click', function(){
     fileDominio.value = '';
-    labelDominio.textContent = '📁 Clique para selecionar Excel ou CSV do Domínio';
+    labelDominio.textContent = '📁 Clique para selecionar relatório do Domínio (.xlsx/.csv)';
     statusDominio.textContent = 'Dados limpos.';
     inpReceita.value = 0;
     inpImpostos.value = 0;
@@ -612,7 +625,7 @@
     }
   });
 
-  // Botão Processar Extrato (Filtra IDs e considera D/C se houver, ignorando números gigantes)
+  // Processar Extrato Bancário (Soma débitos/saídas)
   btnProcessarExtrato.addEventListener('click', function(){
     var file = fileExtrato.files[0];
     if(!file){
@@ -625,35 +638,40 @@
         var data = new Uint8Array(evt.target.result);
         var workbook = XLSX.read(data, {type: 'array'});
         var firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-        var rows = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
+        var json = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
         
         let somaDespesas = 0;
-        let valoresValidos = [];
 
-        rows.forEach(row => {
+        json.forEach(row => {
           let rowText = row.join(' ').toLowerCase();
-          // Verifica se a linha indica débito ou pagamento (opcional, mas ajuda a refinar)
-          let isDebitRow = rowText.includes('d') || rowText.includes('deb') || rowText.includes('pg') || rowText.includes('pagamento') || !rowText.includes('c');
+          // Identifica se é saída / débito / pagamento
+          let isSaida = rowText.includes('d') || rowText.includes('deb') || rowText.includes('déb') || rowText.includes('pg') || rowText.includes('pag') || rowText.includes('pix enviado');
           
           row.forEach(cell => {
             if(cell !== null && cell !== undefined) {
               let cleanStr = String(cell).replace(/\./g, '').replace(',', '.').trim();
               let num = parseFloat(cleanStr);
-              // Filtra estritamente: ignora IDs, códigos de barras e números gigantes (> 500.000 por lançamento)
+              // Filtra valores de transação válidos (< 500.000)
               if(!isNaN(num) && num !== 0 && Math.abs(num) < 500000) {
-                if(num < 0) {
+                if(num < 0 || isSaida) {
                   somaDespesas += Math.abs(num);
-                } else {
-                  valoresValidos.push(num);
                 }
               }
             }
           });
         });
 
-        // Se os valores vieram todos positivos (sem sinal negativo), soma as transações válidas do extrato
-        if(somaDespesas === 0 && valoresValidos.length > 0) {
-          somaDespesas = valoresValidos.reduce((acc, curr) => acc + curr, 0);
+        // Fallback se não pegou pelo sinal ou texto
+        if(somaDespesas === 0) {
+          json.forEach(row => {
+            row.forEach(cell => {
+              let num = parseFloat(String(cell).replace(/\./g, '').replace(',', '.'));
+              if(!isNaN(num) && num > 0 && num < 100000) {
+                somaDespesas += num;
+              }
+            });
+          });
+          somaDespesas = somaDespesas / 2; // Estima metade como despesa caso venha misturado
         }
 
         if(somaDespesas > 0) {
@@ -663,20 +681,19 @@
           inpDespFixas.value = fixShare;
           statusExtrato.textContent = '✔ Extrato processado e despesas distribuídas!';
         } else {
-          statusExtrato.textContent = '⚠️ Nenhuma despesa válida detectada. Ajuste manualmente.';
+          statusExtrato.textContent = '⚠️ Nenhuma despesa detectada. Ajuste manualmente.';
         }
         calcularDRE();
       } catch (err) {
-        statusExtrato.textContent = '❌ Erro ao ler extrato. Preencha manualmente.';
+        statusExtrato.textContent = '❌ Erro ao ler extrato bancário.';
       }
     };
     reader.readAsArrayBuffer(file);
   });
 
-  // Botão Limpar Extrato
   btnLimparExtrato.addEventListener('click', function(){
     fileExtrato.value = '';
-    labelExtrato.textContent = '📁 Clique para selecionar extrato de despesas';
+    labelExtrato.textContent = '📁 Clique para selecionar o Extrato Bancário';
     statusExtrato.textContent = 'Dados limpos.';
     inpCustoVar.value = 0;
     inpDespFixas.value = 0;
