@@ -3,16 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IUS Contabilidade | DRE Gerencial Interativa</title>
-    <!-- SheetJS (Excel) com fallback seguro -->
+    <title>IUS Contabilidade - DRE Interativa</title>
+    <!-- SheetJS para leitura e exportação de arquivos Excel e CSV -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root {
-            --primary: #0F172A;
-            --primary-light: #1E293B;
-            --gold: #C5A059;
-            --gold-hover: #b08d46;
-            --accent: #2563EB;
             --bg: #F8FAFC;
             --surface: #FFFFFF;
             --text: #0F172A;
@@ -20,558 +15,324 @@
             --border: #E2E8F0;
             --danger: #E11D48;
             --success: #10B981;
+            --primary: #0F172A;
+            --accent: #C5A059;
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif; 
-            background-color: var(--bg); 
-            color: var(--text); 
-            line-height: 1.5; 
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding-bottom: 40px; }
 
-        /* Top Bar & Navigation */
-        .top-bar {
-            background-color: #090d16;
-            color: #94a3b8;
-            font-size: 0.8rem;
-            padding: 0.5rem 2rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .navbar { 
-            background: var(--primary); 
-            color: white; 
-            padding: 1rem 2rem; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            position: sticky; 
-            top: 0; 
-            z-index: 100; 
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15); 
-            border-bottom: 2px solid var(--gold);
-        }
-        
-        .brand-badge { 
-            font-weight: 800; 
-            font-size: 1.3rem; 
-            letter-spacing: 1.5px; 
-            color: white; 
-            text-decoration: none; 
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        .brand-badge span.logo-gold { 
-            color: var(--gold); 
-            border: 1.5px solid var(--gold);
-            padding: 0.1rem 0.5rem;
-            border-radius: 4px;
-        }
-
-        /* Hero Header */
-        .hero { 
-            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); 
-            color: white; 
-            padding: 3rem 2rem; 
-            text-align: center; 
-        }
-        .hero h1 { font-size: 2.2rem; margin-bottom: 0.8rem; font-weight: 700; }
-        .hero h1 span { color: var(--gold); }
-        .hero p { max-width: 680px; margin: 0 auto 1.5rem auto; color: #94a3b8; font-size: 1rem; }
-
-        .main-container { max-width: 1180px; margin: -2rem auto 3rem auto; padding: 0 1rem; }
-        
-        .card { 
-            background: var(--surface); 
-            border-radius: 12px; 
-            padding: 1.8rem; 
-            margin-bottom: 1.8rem; 
-            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05); 
-            border: 1px solid var(--border); 
-        }
-
-        .card-header-title {
+        header {
+            background-color: var(--primary);
+            color: #FFF;
+            padding: 1.5rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 1.2rem;
-            padding-bottom: 0.8rem;
-            border-bottom: 1px solid var(--border);
+            border-bottom: 4px solid var(--accent);
         }
-        .card-header-title h2 { font-size: 1.3rem; color: var(--primary); font-weight: 700; }
 
-        /* Form Controls */
-        .client-info-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
-            gap: 1.2rem; 
-            background: #f8fafc; 
-            padding: 1.2rem; 
-            border-radius: 10px; 
-            margin-bottom: 1.5rem; 
-            border: 1px solid var(--border);
-        }
-        .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
-        .form-group label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; }
-        .form-group input { padding: 0.6rem 0.8rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; background: white; color: var(--text); }
-        .form-group input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.2); }
-
-        /* Dashboard KPI Cards */
-        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.2rem; margin-bottom: 1.5rem; }
-        .kpi-card { 
-            background: white; 
-            border: 1px solid var(--border); 
-            border-top: 4px solid var(--gold); 
-            padding: 1.2rem; 
-            border-radius: 10px; 
-            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
-        }
-        .kpi-card.highlight { border-top-color: var(--primary); background: #f8fafc; }
-        .kpi-title { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-        .kpi-value { font-size: 1.35rem; font-weight: 800; margin-top: 0.4rem; color: var(--primary); font-family: monospace; }
-
-        /* Tabs & Buttons */
-        .source-tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; }
-        .tab-btn { background: #e2e8f0; border: none; padding: 0.65rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 600; color: var(--text-muted); font-size: 0.9rem; transition: all 0.2s; }
-        .tab-btn.active { background: var(--primary); color: white; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-
-        .btn { 
-            background-color: var(--gold); 
-            color: white; 
-            padding: 0.65rem 1.3rem; 
-            border: none; 
-            border-radius: 6px; 
-            cursor: pointer; 
-            font-weight: 600; 
-            font-size: 0.9rem; 
-            display: inline-flex; 
-            align-items: center; 
-            gap: 0.5rem; 
-            text-decoration: none; 
-            transition: background 0.2s;
-        }
-        .btn:hover { background-color: var(--gold-hover); }
-        .btn-primary { background-color: var(--primary); }
-        .btn-primary:hover { background-color: var(--primary-light); }
-        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
-        .btn-outline:hover { background: #f1f5f9; }
-        .btn-danger { background-color: var(--danger); padding: 0.35rem 0.6rem; font-size: 0.8rem; border: none; border-radius: 4px; color: white; cursor: pointer; }
-
-        .file-drop { border: 2px dashed var(--gold); border-radius: 10px; padding: 1.5rem; text-align: center; background: #fffdf9; margin-bottom: 1rem; }
-
-        /* Tables */
-        table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.9rem; }
-        th, td { padding: 0.75rem 0.9rem; text-align: left; border-bottom: 1px solid var(--border); }
-        th { background-color: #f8fafc; font-weight: 700; color: var(--primary); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; }
-        
-        td input, td select {
-            width: 100%;
-            padding: 0.4rem 0.6rem;
-            border: 1px solid var(--border);
+        .brand { display: flex; align-items: center; gap: 12px; }
+        .brand-logo {
+            border: 2px solid var(--accent);
+            color: var(--accent);
+            font-weight: bold;
+            padding: 6px 12px;
             border-radius: 4px;
-            font-size: 0.88rem;
+            letter-spacing: 1px;
+        }
+        .brand-title { font-size: 1.25rem; font-weight: 700; letter-spacing: 0.5px; }
+
+        .container { max-width: 900px; margin: 20px auto; padding: 0 15px; }
+
+        .card {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
 
-        .dre-header { background-color: #f8fafc; font-weight: 700; color: var(--primary); }
-        .dre-subtotal { font-weight: 700; background-color: #f1f5f9; color: var(--primary); }
-        .dre-total { font-weight: 800; font-size: 1.05em; background-color: var(--primary); color: white; }
-        .dre-total td { color: white; }
-        .amount { text-align: right; font-family: monospace; font-size: 0.95rem; }
-        .negative { color: var(--danger); }
+        .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 15px; }
+        .kpi-card.highlight { border-left: 4px solid var(--accent); }
+        .kpi-title { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 5px; }
+        .kpi-value { font-size: 1.4rem; font-weight: 700; color: var(--text); }
+        .kpi-value.gold { color: var(--accent); }
 
-        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; }
-        
-        footer { background: var(--primary); color: #94a3b8; text-align: center; padding: 2.5rem 1rem; font-size: 0.9rem; border-top: 3px solid var(--gold); margin-top: 2rem; }
-        footer strong { color: white; }
+        .upload-zone {
+            border: 2px dashed var(--accent);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            background: #FAF8F5;
+            margin-top: 15px;
+        }
 
-        @media print {
-            .no-print, .top-bar, .navbar, .hero, footer { display: none !important; }
-            body { padding: 0; background: white; font-size: 10pt; }
-            .main-container { margin: 0; max-width: 100%; }
-            .card { box-shadow: none; border: none; padding: 0; margin-bottom: 1rem; }
+        .btn {
+            background: var(--primary);
+            color: #FFF;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-secondary { background: #E2E8F0; color: var(--text); }
+        .btn-secondary:hover { background: #CBD5E1; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        th { background: #F1F5F9; font-weight: 600; }
+        .amount { text-align: right; font-weight: 600; }
+
+        .dre-header { background: #F8FAFC; font-weight: 700; }
+        .dre-subtotal { font-weight: 700; border-top: 2px solid var(--border); }
+        .dre-total { font-weight: 800; font-size: 1.05rem; background: #FAF8F5; border-top: 2px solid var(--accent); }
+
+        .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px; }
+
+        @media (max-width: 600px) {
+            .kpi-grid { grid-template-columns: 1fr; }
+            header { flex-direction: column; gap: 10px; text-align: center; }
         }
     </style>
 </head>
 <body>
 
-    <div class="top-bar no-print">
-        <span>📍 IUS Contabilidade & Gestão de Negócios Digitais</span>
-        <span>✉️ contato@iuscontabilidade.com.br</span>
-    </div>
-
-    <nav class="navbar">
-        <a href="#" class="brand-badge">
-            <span class="logo-gold">IUS</span> CONTABILIDADE
-        </a>
-    </nav>
-
-    <header class="hero">
-        <h1>Inteligência Contábil & <span>DRE Interativa</span></h1>
-        <p>Gere e analise o Demonstrativo do Resultado do Exercício de forma dinâmica e profissional.</p>
+    <header>
+        <div class="brand">
+            <div class="brand-logo">IUS</div>
+            <div class="brand-title">CONTABILIDADE</div>
+        </div>
+        <div style="font-size: 0.85rem; color: #CBD5E1;">Demonstrativo do Resultado do Exercício</div>
     </header>
 
-    <main class="main-container">
+    <div class="container">
         
-        <!-- Cartão de Dados da Empresa e KPIs -->
-        <div class="card">
-            <div class="card-header-title">
-                <h2>Relatório Executivo & DRE Gerencial</h2>
-                <span style="font-size: 0.85rem; color: var(--gold); font-weight: 700;">IUS CONTABILIDADE</span>
+        <!-- KPIs -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-title">Lucro Bruto</div>
+                <div class="kpi-value" id="kpiLucroBruto">R$ 0,00</div>
             </div>
-            
-            <div class="client-info-grid">
-                <div class="form-group">
-                    <label>Empresa / Cliente:</label>
-                    <input type="text" id="infoCliente" value="Empresa Exemplo LTDA">
-                </div>
-                <div class="form-group">
-                    <label>CNPJ:</label>
-                    <input type="text" id="infoCNPJ" value="00.000.000/0001-00">
-                </div>
-                <div class="form-group">
-                    <label>Competência / Período:</label>
-                    <input type="text" id="infoPeriodo" value="Agosto / 2026">
-                </div>
-                <div class="form-group">
-                    <label>Responsável Técnico:</label>
-                    <input type="text" id="infoCRC" value="IUS Contabilidade (CRC MG)">
-                </div>
-            </div>
-
-            <div class="kpi-grid">
-                <div class="kpi-card">
-                    <div class="kpi-title">Receita Bruta</div>
-                    <div class="kpi-value" id="kpiReceitaBruta">R$ 0,00</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-title">Receita Líquida</div>
-                    <div class="kpi-value" id="kpiReceitaLiquida">R$ 0,00</div>
-                </div>
-                <div class="kpi-card">
-                    <div class="kpi-title">Lucro Bruto</div>
-                    <div class="kpi-value" id="kpiLucroBruto">R$ 0,00</div>
-                </div>
-                <div class="kpi-card highlight">
-                    <div class="kpi-title">Resultado Líquido (Margem)</div>
-                    <div class="kpi-value" id="kpiResultadoLiquido" style="color: var(--gold);">R$ 0,00 (0.0%)</div>
-                </div>
-            </div>
-
-            <!-- Abas de Entrada -->
-            <div class="no-print">
-                <h3 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--primary);">Origem das Informações</h3>
-                <div class="source-tabs">
-                    <button class="tab-btn active" onclick="switchTab(event, 'extrato')">📁 Extrato Bancário</button>
-                    <button class="tab-btn" onclick="switchTab(event, 'dominio')">🏢 Sistema Domínio</button>
-                    <button class="tab-btn" onclick="switchTab(event, 'manual')">✍️ Lançamento Manual</button>
-                </div>
-
-                <div id="tab-extrato" class="tab-content active">
-                    <div class="file-drop">
-                        <p style="font-weight: 600; color: var(--primary);">Selecione o arquivo Excel / CSV do seu extrato bancário:</p>
-                        <input type="file" id="fileExtrato" accept=".xlsx, .xls, .csv" style="margin-top: 0.5rem;">
-                    </div>
-                    <button class="btn btn-outline" onclick="carregarExemploExtrato()">⚡ Carregar Dados de Exemplo</button>
-                </div>
-
-                <div id="tab-dominio" class="tab-content">
-                    <div class="file-drop">
-                        <p style="font-weight: 600; color: var(--primary);">Importe o relatório exportado do Sistema Domínio:</p>
-                        <input type="file" id="fileDominio" accept=".xlsx, .xls, .csv" style="margin-top: 0.5rem;">
-                    </div>
-                    <button class="btn btn-outline" onclick="carregarExemploDominio()">⚡ Carregar Exemplo Domínio</button>
-                </div>
-
-                <div id="tab-manual" class="tab-content">
-                    <p style="margin-bottom: 0.5rem; color: var(--text-muted);">Adicione ou edite os lançamentos individualmente na tabela abaixo:</p>
-                    <button class="btn btn-primary" onclick="adicionarLinhaVazia()">➕ Adicionar Novo Item</button>
-                </div>
+            <div class="kpi-card highlight">
+                <div class="kpi-title">Resultado Líquido (Margem)</div>
+                <div class="kpi-value gold" id="kpiResultadoLiquido">R$ 0,00 (0.0%)</div>
             </div>
         </div>
 
-        <!-- Tabela de Mapeamento de Contas -->
-        <div class="card no-print">
-            <div class="toolbar">
-                <h3 style="color: var(--primary);">Classificação dos Lançamentos</h3>
-                <div>
-                    <button class="btn btn-primary" onclick="adicionarLinhaVazia()">➕ Adicionar Item</button>
-                    <button class="btn btn-outline" onclick="limparTudo()">🗑️ Limpar Todos</button>
-                </div>
+        <!-- Origem das Informações -->
+        <div class="card">
+            <h3>Importar Extrato Bancário</h3>
+            <div class="upload-zone">
+                <p style="margin-bottom: 10px; font-weight: 600;">Selecione o arquivo Excel / CSV do seu extrato:</p>
+                <input type="file" id="inputExtrato" accept=".csv, .xlsx, .xls">
+            </div>
+            <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+                <button class="btn btn-secondary" onclick="carregarExemplo()">⚡ Carregar Dados de Exemplo</button>
+                <button class="btn btn-secondary" onclick="limparTudo()">🗑️ Limpar Todos</button>
+            </div>
+        </div>
+
+        <!-- Classificação dos Lançamentos -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h3>Classificação dos Lançamentos</h3>
+                <button class="btn" onclick="adicionarLinhaManual()">+ Adicionar Item</button>
             </div>
             
-            <table id="tableLancamentos">
+            <table id="tabelaLancamentos">
                 <thead>
                     <tr>
-                        <th style="width: 40%;">Descrição do Lançamento</th>
-                        <th style="width: 35%;">Categoria DRE</th>
-                        <th style="width: 15%; text-align: right;">Valor (R$)</th>
-                        <th style="width: 10%; text-align: center;">Ação</th>
+                        <th>Descrição</th>
+                        <th>Categoria DRE</th>
+                        <th class="amount">Valor (R$)</th>
+                        <th style="width: 50px; text-align: center;">Ação</th>
                     </tr>
                 </thead>
-                <tbody id="bodyLancamentos"></tbody>
+                <tbody id="bodyLancamentos">
+                    <!-- Linhas do extrato -->
+                </tbody>
             </table>
         </div>
 
-        <!-- Tabela Oficial da DRE Interativa -->
+        <!-- DRE Consolidada -->
         <div class="card">
-            <div class="toolbar no-print">
-                <h3 style="color: var(--primary);">Demonstração do Resultado do Exercício (DRE)</h3>
-                <div>
-                    <button class="btn btn-outline" onclick="exportarExcel()">📥 Exportar Excel</button>
-                    <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
-                </div>
-            </div>
-
+            <h3>Demonstrativo do Resultado (DRE)</h3>
             <table id="tableDRE">
-                <thead>
-                    <tr>
-                        <th>Estrutura Contábil / Linha da DRE</th>
-                        <th class="amount" style="width: 25%;">Valor Consolidado (R$)</th>
-                        <th class="amount" style="width: 20%;">Análise Vertical (%)</th>
-                    </tr>
-                </thead>
-                <tbody id="bodyDRE"></tbody>
+                <tbody id="bodyDRE">
+                    <!-- Tabela calculada -->
+                </tbody>
             </table>
+            <div class="actions">
+                <button class="btn" onclick="exportarExcel()">📥 Exportar DRE para Excel</button>
+            </div>
         </div>
 
-    </main>
+    </div>
 
-    <footer>
-        <p><strong>IUS CONTABILIDADE & GESTÃO DE NEGÓCIOS DIGITAIS</strong></p>
-        <p style="margin: 0.4rem 0;">Soluções Estratégicas em Inteligência Tributária e Consultoria Financeira</p>
-        <p><small>© 2026 IUS Contabilidade. Todos os direitos reservados.</small></p>
-    </footer>
+    <script>
+        let lancamentos = [];
 
-<script>
-    const CATEGORIAS_DRE = [
-        { id: 'REC_PROD', label: '(+) Receita Bruta - Vendas' },
-        { id: 'REC_SERV', label: '(+) Receita Bruta - Serviços' },
-        { id: 'DED_IMP', label: '(-) Impostos sobre Vendas' },
-        { id: 'DED_DEV', label: '(-) Devoluções e Abatimentos' },
-        { id: 'CUST_MAT', label: '(-) Custos com Produtos/CMV' },
-        { id: 'CUST_SERV', label: '(-) Custos com Serviços Subcontratados' },
-        { id: 'DESP_PES', label: '(-) Despesas com Pessoal / Pró-Labore' },
-        { id: 'DESP_ADM', label: '(-) Despesas Administrativas' },
-        { id: 'DESP_VEN', label: '(-) Despesas de Marketing e Vendas' },
-        { id: 'DESP_FIN', label: '(-) Despesas Financeiras' },
-        { id: 'IGNORAR', label: '🚫 Ignorar Item' }
-    ];
+        // Leitura automática do arquivo ao selecionar
+        document.getElementById('inputExtrato').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
 
-    let lancamentos = [];
-
-    function switchTab(evt, tabName) {
-        if (evt && evt.preventDefault) evt.preventDefault();
-        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-        
-        if (evt && evt.currentTarget) {
-            evt.currentTarget.classList.add('active');
-        }
-        const targetDiv = document.getElementById('tab-' + tabName);
-        if (targetDiv) targetDiv.classList.add('active');
-    }
-
-    function classificarInteligente(descricao, valor) {
-        const d = (descricao || '').toUpperCase();
-        if (d.includes('SIMPLES') || d.includes('DAS') || d.includes('ISS') || d.includes('IMPOSTO')) return 'DED_IMP';
-        if (d.includes('SALARIO') || d.includes('PRO-LABORE') || d.includes('FOLHA') || d.includes('INSS')) return 'DESP_PES';
-        if (d.includes('ALUGUEL') || d.includes('ENERGIA') || d.includes('INTERNET')) return 'DESP_ADM';
-        if (d.includes('ADS') || d.includes('MARKETING') || d.includes('GOOGLE')) return 'DESP_VEN';
-        if (d.includes('TARIFA') || d.includes('BANCO')) return 'DESP_FIN';
-        if (d.includes('FORNECEDOR') || d.includes('COMPRA')) return 'CUST_MAT';
-        if (valor > 0 || d.includes('PIX') || d.includes('RECEBIMENTO')) return d.includes('SERV') ? 'REC_SERV' : 'REC_PROD';
-        return 'DESP_ADM';
-    }
-
-    const fileExtratoEl = document.getElementById('fileExtrato');
-    if (fileExtratoEl) fileExtratoEl.addEventListener('change', e => processarArquivoExcel(e.target.files[0]));
-    
-    const fileDominioEl = document.getElementById('fileDominio');
-    if (fileDominioEl) fileDominioEl.addEventListener('change', e => processarArquivoExcel(e.target.files[0]));
-
-    function processarArquivoExcel(file) {
-        if (!file) return;
-        if (typeof XLSX === 'undefined') {
-            alert("A biblioteca de leitura de Excel ainda está sendo carregada ou não pôde ser baixada. Tente novamente ou use o lançamento manual.");
-            return;
-        }
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
-                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                const json = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const data = evt.target.result;
+                const workbook = XLSX.read(data, { type: 'binary' });
+                const sheetName = workbook.SheetNames[0];
+                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
 
                 lancamentos = [];
-                json.forEach((row, idx) => {
-                    if (idx === 0 || row.length < 2) return;
-                    let desc = row[0] || row[1] || 'Lançamento';
-                    let val = parseFloat(row[2] || row[1] || 0);
-                    if (typeof desc === 'string' && !isNaN(val) && val !== 0) {
-                        let cat = classificarInteligente(desc, val);
-                        lancamentos.push({ desc: String(desc).trim(), cat, valor: Math.abs(val) });
+
+                rows.forEach(row => {
+                    const descricao = row['origem / destino'] || row['tipo'] || row['Descrição'] || row['historico'] || 'Lançamento';
+                    
+                    let valRaw = String(row['valor'] || row['Valor'] || row['valor_num'] || '0');
+                    const ehNegativo = valRaw.includes('-') || valRaw.includes('−');
+                    let valLimpo = valRaw.replace(/[^0-9,.]/g, '').replace(',', '.');
+                    let valorNum = parseFloat(valLimpo) || 0;
+                    
+                    if (ehNegativo) valorNum = -Math.abs(valorNum);
+
+                    let categoria = 'RECEITA';
+                    if (valorNum < 0) {
+                        categoria = 'DESPESA';
+                        valorNum = Math.abs(valorNum);
                     }
+
+                    lancamentos.push({ descricao, categoria, valor: valorNum });
                 });
 
-                renderizarTabelaLancamentos();
+                renderizarTabela();
                 recalcularDRE();
-            } catch (err) {
-                alert("Erro ao ler arquivo: " + err.message);
-            }
-        };
-        reader.readAsArrayBuffer(file);
-    }
+            };
 
-    function carregarExemploExtrato() {
-        lancamentos = [
-            { desc: 'PIX RECEBIDO - CONSULTORIA TRIBUTÁRIA', cat: 'REC_SERV', valor: 75000 },
-            { desc: 'VENDAS CURSO / SERVIÇOS ONLINE', cat: 'REC_PROD', valor: 95000 },
-            { desc: 'IMPOSTO SIMPLES NACIONAL (DAS)', cat: 'DED_IMP', valor: 14200 },
-            { desc: 'FORNECEDORES DE TECNOLOGIA E SOFTWARES', cat: 'CUST_MAT', valor: 38000 },
-            { desc: 'FOLHA DE PAGAMENTO E PRÓ-LABORE', cat: 'DESP_PES', valor: 35000 },
-            { desc: 'ALUGUEL ESCRITÓRIO & CONDOMÍNIO', cat: 'DESP_ADM', valor: 7200 },
-            { desc: 'ANÚNCIOS META & GOOGLE ADS', cat: 'DESP_VEN', valor: 6500 },
-            { desc: 'TARIFAS BANCÁRIAS E MANUTENÇÃO PJ', cat: 'DESP_FIN', valor: 450 }
-        ];
-        renderizarTabelaLancamentos();
-        recalcularDRE();
-    }
+            reader.readAsBinaryString(file);
+        });
 
-    function carregarExemploDominio() {
-        lancamentos = [
-            { desc: '3.1.01 - Receita Bruta de Vendas', cat: 'REC_PROD', valor: 130000 },
-            { desc: '3.1.02 - Receita Bruta de Serviços', cat: 'REC_SERV', valor: 60000 },
-            { desc: '3.1.03 - Deduções e Impostos', cat: 'DED_IMP', valor: 16800 },
-            { desc: '3.2.01 - Custos CMV', cat: 'CUST_MAT', valor: 58000 },
-            { desc: '3.3.01 - Despesas Operacionais Gerais', cat: 'DESP_ADM', valor: 24000 }
-        ];
-        renderizarTabelaLancamentos();
-        recalcularDRE();
-    }
+        function renderizarTabela() {
+            const tbody = document.getElementById('bodyLancamentos');
+            tbody.innerHTML = '';
 
-    function renderizarTabelaLancamentos() {
-        const tbody = document.getElementById('bodyLancamentos');
-        if (!tbody) return;
-        tbody.innerHTML = '';
-        if (lancamentos.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Nenhum lançamento importado no momento.</td></tr>`;
-            return;
+            lancamentos.forEach((item, index) => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><input type="text" value="${item.descricao}" onchange="atualizarItem(${index}, 'descricao', this.value)" style="width: 100%; border: 1px solid #CBD5E1; padding: 4px; border-radius: 4px;"></td>
+                    <td>
+                        <select onchange="atualizarItem(${index}, 'categoria', this.value)" style="width: 100%; border: 1px solid #CBD5E1; padding: 4px; border-radius: 4px;">
+                            <option value="RECEITA" ${item.categoria === 'RECEITA' ? 'selected' : ''}>Receita Operacional</option>
+                            <option value="DEDUCAO" ${item.categoria === 'DEDUCAO' ? 'selected' : ''}>Deduções / Impostos</option>
+                            <option value="CUSTO" ${item.categoria === 'CUSTO' ? 'selected' : ''}>Custos Operacionais</option>
+                            <option value="DESPESA" ${item.categoria === 'DESPESA' ? 'selected' : ''}>Despesas Operacionais</option>
+                        </select>
+                    </td>
+                    <td class="amount"><input type="number" step="0.01" value="${item.valor}" onchange="atualizarItem(${index}, 'valor', parseFloat(this.value) || 0)" style="width: 100px; text-align: right; border: 1px solid #CBD5E1; padding: 4px; border-radius: 4px;"></td>
+                    <td style="text-align: center;"><button onclick="removerItem(${index})" style="background: none; border: none; color: var(--danger); cursor: pointer; font-weight: bold;">✕</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
 
-        lancamentos.forEach((item, idx) => {
-            let optionsHtml = CATEGORIAS_DRE.map(c => 
-                `<option value="${c.id}" ${c.id === item.cat ? 'selected' : ''}>${c.label}</option>`
-            ).join('');
-
-            let tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><input type="text" value="${item.desc}" onchange="atualizarItem(${idx}, 'desc', this.value)"></td>
-                <td><select onchange="atualizarItem(${idx}, 'cat', this.value)">${optionsHtml}</select></td>
-                <td><input type="number" step="0.01" value="${item.valor}" onchange="atualizarItem(${idx}, 'valor', parseFloat(this.value)||0)"></td>
-                <td style="text-align: center;"><button class="btn-danger" onclick="removerLinha(${idx})">❌</button></td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    function atualizarItem(idx, campo, valor) {
-        if (lancamentos[idx]) {
-            lancamentos[idx][campo] = valor;
+        function atualizarItem(index, campo, valor) {
+            lancamentos[index][campo] = valor;
             recalcularDRE();
         }
-    }
 
-    function adicionarLinhaVazia() {
-        lancamentos.push({ desc: 'Novo Lançamento', cat: 'REC_PROD', valor: 0 });
-        renderizarTabelaLancamentos();
-        recalcularDRE();
-    }
+        function adicionarLinhaManual() {
+            lancamentos.push({ descricao: 'Novo Item', categoria: 'RECEITA', valor: 0 });
+            renderizarTabela();
+            recalcularDRE();
+        }
 
-    function removerLinha(idx) {
-        lancamentos.splice(idx, 1);
-        renderizarTabelaLancamentos();
-        recalcularDRE();
-    }
+        function removerItem(index) {
+            lancamentos.splice(index, 1);
+            renderizarTabela();
+            recalcularDRE();
+        }
 
-    function limparTudo() {
-        lancamentos = [];
-        renderizarTabelaLancamentos();
-        recalcularDRE();
-    }
+        function limparTudo() {
+            lancamentos = [];
+            document.getElementById('inputExtrato').value = '';
+            renderizarTabela();
+            recalcularDRE();
+        }
 
-    function recalcularDRE() {
-        const totais = {};
-        CATEGORIAS_DRE.forEach(c => totais[c.id] = 0);
+        function carregarExemplo() {
+            lancamentos = [
+                { descricao: 'Venda de Serviços', categoria: 'RECEITA', valor: 150000 },
+                { descricao: 'Impostos sobre Serviços (ISS/Simples)', categoria: 'DEDUCAO', valor: 12000 },
+                { descricao: 'Custos com Insumos / Sistemas', categoria: 'CUSTO', valor: 20200 },
+                { descricao: 'Despesas com Pessoal e Aluguel', categoria: 'DESPESA', valor: 49150 }
+            ];
+            renderizarTabela();
+            recalcularDRE();
+        }
 
-        lancamentos.forEach(item => {
-            if (totais[item.cat] !== undefined) totais[item.cat] += (item.valor || 0);
-        });
+        function fmt(val) {
+            return val.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
 
-        const receitaBruta = totais['REC_PROD'] + totais['REC_SERV'];
-        const deducoes = totais['DED_IMP'] + totais['DED_DEV'];
-        const receitaLiquida = receitaBruta - deducoes;
-        const custos = totais['CUST_MAT'] + totais['CUST_SERV'];
-        const lucroBruto = receitaLiquida - custos;
-        const despesas = totais['DESP_PES'] + totais['DESP_ADM'] + totais['DESP_VEN'] + totais['DESP_FIN'];
-        const resultadoLiquido = lucroBruto - despesas;
+        function pct(val, base) {
+            if (!base || base === 0) return '0.0%';
+            return ((val / base) * 100).toFixed(1) + '%';
+        }
 
-        function pct(v) { return receitaBruta === 0 ? '0.0%' : ((v / receitaBruta) * 100).toFixed(1) + '%'; }
-        function fmt(v) { return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+        function recalcularDRE() {
+            let receita = 0, deducao = 0, custo = 0, despesa = 0;
 
-        document.getElementById('kpiReceitaBruta').innerText = `R$ ${fmt(receitaBruta)}`;
-        document.getElementById('kpiReceitaLiquida').innerText = `R$ ${fmt(receitaLiquida)}`;
-        document.getElementById('kpiLucroBruto').innerText = `R$ ${fmt(lucroBruto)}`;
-        document.getElementById('kpiResultadoLiquido').innerText = `R$ ${fmt(resultadoLiquido)} (${pct(resultadoLiquido)})`;
+            lancamentos.forEach(item => {
+                if (item.categoria === 'RECEITA') receita += item.valor;
+                if (item.categoria === 'DEDUCAO') deducao += item.valor;
+                if (item.categoria === 'CUSTO') custo += item.valor;
+                if (item.categoria === 'DESPESA') despesa += item.valor;
+            });
 
-        const bodyDRE = document.getElementById('bodyDRE');
-        if (bodyDRE) {
+            const receitaLiquida = receita - deducao;
+            const lucroBruto = receitaLiquida - custo;
+            const resultadoLiquido = lucroBruto - despesa;
+
+            document.getElementById('kpiLucroBruto').innerText = fmt(lucroBruto);
+            document.getElementById('kpiResultadoLiquido').innerText = `${fmt(resultadoLiquido)} (${pct(resultadoLiquido, receita)})`;
+
+            const bodyDRE = document.getElementById('bodyDRE');
             bodyDRE.innerHTML = `
-                <tr class="dre-header"><td>(+) RECEITA OPERACIONAL BRUTA</td><td class="amount">${fmt(receitaBruta)}</td><td class="amount">100.0%</td></tr>
-                <tr><td style="padding-left: 2rem;">Venda de Produtos</td><td class="amount">${fmt(totais['REC_PROD'])}</td><td class="amount">${pct(totais['REC_PROD'])}</td></tr>
-                <tr><td style="padding-left: 2rem;">Prestação de Serviços</td><td class="amount">${fmt(totais['REC_SERV'])}</td><td class="amount">${pct(totais['REC_SERV'])}</td></tr>
-
-                <tr class="dre-header"><td>(-) DEDUÇÕES E IMPOSTOS SOBRE VENDAS</td><td class="amount negative">-${fmt(deducoes)}</td><td class="amount negative">-${pct(deducoes)}</td></tr>
-                <tr class="dre-subtotal"><td>(=) RECEITA OPERACIONAL LÍQUIDA</td><td class="amount">${fmt(receitaLiquida)}</td><td class="amount">${pct(receitaLiquida)}</td></tr>
-
-                <tr class="dre-header"><td>(-) CUSTOS OPERACIONAIS (CMV / CPV)</td><td class="amount negative">-${fmt(custos)}</td><td class="amount negative">-${pct(custos)}</td></tr>
-                <tr class="dre-subtotal"><td>(=) LUCRO BRUTO OPERACIONAL</td><td class="amount">${fmt(lucroBruto)}</td><td class="amount">${pct(lucroBruto)}</td></tr>
-
-                <tr class="dre-header"><td>(-) DESPESAS OPERACIONAIS</td><td class="amount negative">-${fmt(despesas)}</td><td class="amount negative">-${pct(despesas)}</td></tr>
+                <tr class="dre-header"><td>(+) RECEITA OPERACIONAL BRUTA</td><td class="amount">${fmt(receita)}</td><td class="amount">100.0%</td></tr>
+                <tr><td style="padding-left: 2rem;">(-) DEDUÇÕES E IMPOSTOS</td><td class="amount">${fmt(deducao)}</td><td class="amount">${pct(deducao, receita)}</td></tr>
+                <tr class="dre-subtotal"><td>(=) RECEITA OPERACIONAL LÍQUIDA</td><td class="amount">${fmt(receitaLiquida)}</td><td class="amount">${pct(receitaLiquida, receita)}</td></tr>
+                <tr><td style="padding-left: 2rem;">(-) CUSTOS OPERACIONAIS</td><td class="amount">${fmt(custo)}</td><td class="amount">${pct(custo, receita)}</td></tr>
+                <tr class="dre-subtotal"><td>(=) LUCRO BRUTO OPERACIONAL</td><td class="amount">${fmt(lucroBruto)}</td><td class="amount">${pct(lucroBruto, receita)}</td></tr>
+                <tr><td style="padding-left: 2rem;">(-) DESPESAS OPERACIONAIS</td><td class="amount">${fmt(despesa)}</td><td class="amount">${pct(despesa, receita)}</td></tr>
                 <tr class="dre-total">
                     <td>(=) RESULTADO LÍQUIDO DO EXERCÍCIO</td>
                     <td class="amount">${fmt(resultadoLiquido)}</td>
-                    <td class="amount">${pct(resultadoLiquido)}</td>
+                    <td class="amount">${pct(resultadoLiquido, receita)}</td>
                 </tr>
             `;
         }
-    }
 
-    function exportarExcel() {
-        if (typeof XLSX === 'undefined') {
-            alert("A biblioteca SheetJS não está disponível no momento para exportar.");
-            return;
+        function exportarExcel() {
+            if (typeof XLSX === 'undefined') {
+                alert("Biblioteca SheetJS carregando...");
+                return;
+            }
+            const table = document.getElementById('tableDRE');
+            const wb = XLSX.utils.table_to_book(table, { sheet: "DRE Consolidada" });
+            XLSX.writeFile(wb, 'DRE_IUS_Contabilidade.xlsx');
         }
-        const table = document.getElementById('tableDRE');
-        const clienteInput = document.getElementById('infoCliente');
-        const nomeCliente = clienteInput ? clienteInput.value : 'Cliente';
-        const wb = XLSX.utils.table_to_book(table, { sheet: "DRE" });
-        XLSX.writeFile(wb, `DRE_${nomeCliente}.xlsx`);
-    }
 
-    document.addEventListener("DOMContentLoaded", function() {
-        carregarExemploExtrato();
-    });
-    if (document.readyState === "complete" || document.readyState === "interactive") {
-        carregarExemploExtrato();
-    }
-</script>
+        document.addEventListener("DOMContentLoaded", function() {
+            recalcularDRE();
+        });
+    </script>
 </body>
 </html>
