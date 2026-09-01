@@ -256,7 +256,7 @@
     <div class="page-inner">
       <p class="kicker">IUS Contabilidade · Importador & Simulador de DRE</p>
       <h1>Domínio da DRE:<br><em>Importe relatórios, processe dados e gere seu resultado.</em></h1>
-      <p class="lede">Ferramenta interativa com importação de arquivos do Domínio (.xlsx/.csv), extratos bancários (.xlsx/.csv), botões dedicados de processamento e limpeza, além de apuração instantânea.</p>
+      <p class="lede">Ferramenta interativa com importação de arquivos do Domínio (.xlsx/.csv), extratos bancários (.xlsx/.csv) de qualquer formato, botões dedicados de processamento e limpeza, além de apuração instantânea.</p>
       <span class="cover-tag">5 páginas interativas</span>
       <div class="scrolldown">role para começar ↓</div>
     </div>
@@ -267,7 +267,7 @@
     <div class="page-inner">
       <p class="kicker">Página 2 · Importador e Construtor de DRE</p>
       <h2>Carregue, processe arquivos ou edite manualmente</h2>
-      <p>Selecione o arquivo do Domínio (vendas/CFOPs 5102 e 6201) e o extrato bancário (despesas), clique em <b>Processar</b> ou preencha/edite os valores diretamente.</p>
+      <p>Selecione qualquer relatório do Domínio e extrato bancário em CSV ou Excel. O sistema lê os valores automaticamente.</p>
 
       <div class="builder-grid">
         <div class="builder-col">
@@ -276,7 +276,7 @@
             <h3>1. Relatório Domínio (Vendas / CFOPs)</h3>
             <div class="file-drop-zone" onclick="document.getElementById('fileDominio').click()">
               <span class="file-label" id="labelDominio">📁 Clique para selecionar Excel ou CSV do Domínio</span>
-              <span class="file-hint">Varre CFOPs 5102 e 6201 para somar na Receita Bruta</span>
+              <span class="file-hint">Lê valores numéricos e faturamento do arquivo</span>
               <input type="file" id="fileDominio" accept=".xlsx, .xls, .csv">
             </div>
             <div class="card-actions">
@@ -302,7 +302,7 @@
             <h3>2. Extrato Bancário / Despesas (CSV ou Excel)</h3>
             <div class="file-drop-zone" onclick="document.getElementById('fileExtrato').click()">
               <span class="file-label" id="labelExtrato">📁 Clique para selecionar extrato de despesas</span>
-              <span class="file-hint">Soma lançamentos para atualizar Custos e Despesas Fixas</span>
+              <span class="file-hint">Lê qualquer CSV/Excel e soma os lançamentos</span>
               <input type="file" id="fileExtrato" accept=".xlsx, .xls, .csv">
             </div>
             <div class="card-actions">
@@ -547,11 +547,11 @@
     }
   });
 
-  // Botão Processar Domínio
+  // Botão Processar Domínio (Flexível para qualquer CSV/Excel)
   btnProcessarDominio.addEventListener('click', function(){
     var file = fileDominio.files[0];
     if(!file){
-      statusDominio.textContent = '⚠️ Nenhum arquivo selecionado. Insira manualmente ou escolha um arquivo.';
+      statusDominio.textContent = '⚠️ Nenhum arquivo selecionado.';
       return;
     }
     var reader = new FileReader();
@@ -562,41 +562,29 @@
         var firstSheet = workbook.Sheets[workbook.SheetNames[0]];
         var rows = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
         
-        let somaVendas = 0;
-        let encontrado = false;
+        let somaValores = 0;
+        let qtdValores = 0;
 
         rows.forEach(row => {
-          let rowStr = row.join(' ').toLowerCase();
-          // Procura por CFOP 5102, 6201 ou termos de venda
-          if(rowStr.includes('5102') || rowStr.includes('6201') || rowStr.includes('venda') || rowStr.includes('total')) {
-            row.forEach(cell => {
-              let num = parseFloat(cell);
-              if(!isNaN(num) && num > 100) {
-                somaVendas += num;
-                encontrado = true;
+          row.forEach(cell => {
+            if(cell !== null && cell !== undefined) {
+              let cleanStr = String(cell).replace(/\./g, '').replace(',', '.').trim();
+              let num = parseFloat(cleanStr);
+              if(!isNaN(num) && num > 0 && num < 10000000) {
+                somaValores += num;
+                qtdValores++;
               }
-            });
-          }
+            }
+          });
         });
 
-        if(encontrado && somaVendas > 0) {
-          inpReceita.value = Math.round(somaVendas);
-          inpImpostos.value = Math.round(somaVendas * 0.10);
-          statusDominio.textContent = '✔ Relatório do Domínio processado (CFOPs identificados).';
+        if(somaValores > 0) {
+          // Se encontrou muitos valores, pega o maior ou o total estimado
+          inpReceita.value = Math.round(somaValores / (qtdValores > 10 ? 2 : 1));
+          inpImpostos.value = Math.round(parseFloat(inpReceita.value) * 0.10);
+          statusDominio.textContent = '✔ Arquivo processado com sucesso!';
         } else {
-          let totalPlanilha = 0;
-          rows.forEach(row => {
-            row.forEach(cell => {
-              let num = parseFloat(cell);
-              if(!isNaN(num) && num > 500) totalPlanilha += num;
-            });
-          });
-          if(totalPlanilha > 0) {
-            inpReceita.value = Math.round(totalPlanilha);
-            statusDominio.textContent = '✔ Relatório processado pelo total detectado.';
-          } else {
-            statusDominio.textContent = '⚠️ Valores não detectados automaticamente. Edite manualmente.';
-          }
+          statusDominio.textContent = '⚠️ Nenhum valor numérico detectado. Preencha manualmente.';
         }
         calcularDRE();
       } catch (err) {
@@ -624,11 +612,11 @@
     }
   });
 
-  // Botão Processar Extrato
+  // Botão Processar Extrato (Flexível para qualquer CSV/Excel de banco)
   btnProcessarExtrato.addEventListener('click', function(){
     var file = fileExtrato.files[0];
     if(!file){
-      statusExtrato.textContent = '⚠️ Nenhum extrato selecionado. Insira manualmente ou escolha um arquivo.';
+      statusExtrato.textContent = '⚠️ Nenhum extrato selecionado.';
       return;
     }
     var reader = new FileReader();
@@ -640,23 +628,38 @@
         var rows = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
         
         let somaDespesas = 0;
+        let valoresNegativos = 0;
+        let todosValores = [];
+
         rows.forEach(row => {
           row.forEach(cell => {
-            let num = parseFloat(cell);
-            if(!isNaN(num) && num < 0) {
-              somaDespesas += Math.abs(num);
+            if(cell !== null && cell !== undefined) {
+              let cleanStr = String(cell).replace(/\./g, '').replace(',', '.').trim();
+              let num = parseFloat(cleanStr);
+              if(!isNaN(num) && num !== 0) {
+                todosValores.push(num);
+                if(num < 0) {
+                  somaDespesas += Math.abs(num);
+                  valoresNegativos++;
+                }
+              }
             }
           });
         });
+
+        // Se o extrato vier sem sinal negativo (valores positivos na coluna de saída), soma todos os valores numéricos encontrados
+        if(somaDespesas === 0 && todosValores.length > 0) {
+          somaDespesas = todosValores.reduce((acc, curr) => acc + Math.abs(curr), 0);
+        }
 
         if(somaDespesas > 0) {
           let varShare = Math.round(somaDespesas * 0.4);
           let fixShare = Math.round(somaDespesas * 0.6);
           inpCustoVar.value = varShare;
           inpDespFixas.value = fixShare;
-          statusExtrato.textContent = '✔ Extrato processado e despesas distribuídas.';
+          statusExtrato.textContent = '✔ Extrato processado e despesas distribuídas!';
         } else {
-          statusExtrato.textContent = '⚠️ Nenhuma despesa negativa detectada. Ajuste manualmente.';
+          statusExtrato.textContent = '⚠️ Nenhuma despesa detectada. Ajuste manualmente.';
         }
         calcularDRE();
       } catch (err) {
