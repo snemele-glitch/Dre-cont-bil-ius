@@ -3,175 +3,274 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IUS Contabilidade - DRE Interativa</title>
+    <title>IUS Contabilidade - Revista DRE Interativa</title>
     <!-- SheetJS para leitura e exportação de arquivos Excel e CSV -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root {
-            --bg: #F8FAFC;
+            --bg: #F4F5F7;
             --surface: #FFFFFF;
-            --text: #0F172A;
+            --text: #1E293B;
             --text-muted: #64748B;
             --border: #E2E8F0;
             --danger: #E11D48;
             --success: #10B981;
-            --primary: #0F172A;
-            --accent: #C5A059;
+            --primary: #0A0F1D; /* Azul Corporativo IUS */
+            --accent: #C5A059;  /* Dourado IUS */
+            --accent-light: #FAF8F5;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background-color: var(--bg); color: var(--text); padding-bottom: 40px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding-bottom: 60px; line-height: 1.5; }
 
+        /* Estilo Revista / Editorial Header */
         header {
             background-color: var(--primary);
             color: #FFF;
-            padding: 1.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            padding: 2.5rem 2rem;
             border-bottom: 4px solid var(--accent);
+            position: relative;
+            overflow: hidden;
         }
 
-        .brand { display: flex; align-items: center; gap: 12px; }
+        header::after {
+            content: "";
+            position: absolute;
+            right: -50px;
+            bottom: -50px;
+            width: 200px;
+            height: 200px;
+            border: 2px solid rgba(197, 160, 89, 0.15);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .header-content { max-width: 1000px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
+        .brand { display: flex; align-items: center; gap: 16px; }
         .brand-logo {
             border: 2px solid var(--accent);
             color: var(--accent);
-            font-weight: bold;
-            padding: 6px 12px;
-            border-radius: 4px;
-            letter-spacing: 1px;
+            font-weight: 800;
+            padding: 8px 14px;
+            border-radius: 6px;
+            letter-spacing: 2px;
+            font-size: 1.25rem;
+            background: rgba(197, 160, 89, 0.08);
         }
-        .brand-title { font-size: 1.25rem; font-weight: 700; letter-spacing: 0.5px; }
+        .brand-title { font-size: 1.4rem; font-weight: 700; letter-spacing: 1px; color: #FFFFFF; }
+        .magazine-tag {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--accent);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+            border: 1px solid rgba(197, 160, 89, 0.3);
+        }
 
-        .container { max-width: 900px; margin: 20px auto; padding: 0 15px; }
+        .container { max-width: 1000px; margin: -25px auto 0 auto; padding: 0 20px; position: relative; z-index: 2; }
 
+        /* Cartões estilo Revista (Artigos/Capítulos) */
         .card {
             background: var(--surface);
             border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
+            padding: 28px;
+            margin-bottom: 24px;
             border: 1px solid var(--border);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+            box-shadow: var(--card-shadow);
+            transition: transform 0.2s ease;
         }
 
-        .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
-        .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 15px; }
-        .kpi-card.highlight { border-left: 4px solid var(--accent); }
-        .kpi-title { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 5px; }
-        .kpi-value { font-size: 1.4rem; font-weight: 700; color: var(--text); }
+        .card-header-editorial {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--bg);
+            padding-bottom: 12px;
+        }
+
+        .card-number {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: var(--accent);
+            letter-spacing: 1px;
+        }
+
+        .card h2 {
+            font-size: 1.15rem;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 800;
+        }
+
+        /* KPIs estilo Painel Executivo */
+        .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+        .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px; box-shadow: var(--card-shadow); position: relative; overflow: hidden; }
+        .kpi-card.highlight { border-left: 5px solid var(--accent); background: linear-gradient(135deg, #FFFFFF 0%, var(--accent-light) 100%); }
+        .kpi-title { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 800; letter-spacing: 1px; margin-bottom: 8px; }
+        .kpi-value { font-size: 1.6rem; font-weight: 800; color: var(--text); }
         .kpi-value.gold { color: var(--accent); }
 
+        /* Área de Upload Estilo Editorial */
         .upload-zone {
             border: 2px dashed var(--accent);
-            border-radius: 8px;
-            padding: 20px;
+            border-radius: 10px;
+            padding: 28px;
             text-align: center;
-            background: #FAF8F5;
-            margin-top: 15px;
+            background: var(--accent-light);
+            cursor: pointer;
+            transition: background 0.2s;
         }
+        .upload-zone:hover { background: #F5EFEB; }
 
         .btn {
             background: var(--primary);
             color: #FFF;
             border: none;
-            padding: 10px 18px;
-            border-radius: 6px;
+            padding: 11px 20px;
+            border-radius: 8px;
             font-weight: 600;
+            font-size: 0.88rem;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
+        .btn:hover { background: #1E293B; transform: translateY(-1px); }
 
-        .btn-secondary { background: #E2E8F0; color: var(--text); }
+        .btn-secondary { background: #E2E8F0; color: var(--text); box-shadow: none; }
         .btn-secondary:hover { background: #CBD5E1; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
-        th { background: #F1F5F9; font-weight: 600; }
+        /* Tabelas refinadas */
+        .table-container { overflow-x: auto; margin-top: 10px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 14px 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
+        th { background: #F8FAFC; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.72rem; letter-spacing: 1px; }
         .amount { text-align: right; font-weight: 600; }
 
-        .dre-header { background: #F8FAFC; font-weight: 700; }
-        .dre-subtotal { font-weight: 700; border-top: 2px solid var(--border); }
-        .dre-total { font-weight: 800; font-size: 1.05rem; background: #FAF8F5; border-top: 2px solid var(--accent); }
+        .dre-header { background: #F8FAFC; font-weight: 700; color: var(--primary); }
+        .dre-subtotal { font-weight: 700; border-top: 2px solid var(--border); background: #FAF8F5; }
+        .dre-total { font-weight: 800; font-size: 1.1rem; background: var(--primary); color: #FFF; border-top: 3px solid var(--accent); }
+        .dre-total td { color: #FFF !important; }
 
-        .actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px; }
+        .actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; }
 
-        @media (max-width: 600px) {
+        input[type="text"], select, input[type="number"] {
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 10px;
+            font-size: 0.88rem;
+            background: #FFF;
+            color: var(--text);
+        }
+        input[type="text"]:focus, select:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.15);
+        }
+
+        @media (max-width: 768px) {
             .kpi-grid { grid-template-columns: 1fr; }
-            header { flex-direction: column; gap: 10px; text-align: center; }
+            .header-content { flex-direction: column; text-align: center; }
+            .brand { justify-content: center; }
         }
     </style>
 </head>
 <body>
 
     <header>
-        <div class="brand">
-            <div class="brand-logo">IUS</div>
-            <div class="brand-title">CONTABILIDADE</div>
+        <div class="header-content">
+            <div class="brand">
+                <div class="brand-logo">IUS</div>
+                <div>
+                    <div class="brand-title">CONTABILIDADE</div>
+                    <div style="font-size: 0.8rem; color: #94A3B8; letter-spacing: 0.5px;">Inteligência Contábil Estratégica</div>
+                </div>
+            </div>
+            <div class="magazine-tag">📖 Edição Interativa • DRE Executiva</div>
         </div>
-        <div style="font-size: 0.85rem; color: #CBD5E1;">Demonstrativo do Resultado do Exercício</div>
     </header>
 
     <div class="container">
         
-        <!-- KPIs -->
+        <!-- KPIs em destaque -->
         <div class="kpi-grid">
             <div class="kpi-card">
-                <div class="kpi-title">Lucro Bruto</div>
+                <div class="kpi-title">Lucro Bruto Operacional</div>
                 <div class="kpi-value" id="kpiLucroBruto">R$ 0,00</div>
             </div>
             <div class="kpi-card highlight">
-                <div class="kpi-title">Resultado Líquido (Margem)</div>
+                <div class="kpi-title">Resultado Líquido & Margem</div>
                 <div class="kpi-value gold" id="kpiResultadoLiquido">R$ 0,00 (0.0%)</div>
             </div>
         </div>
 
-        <!-- Origem das Informações -->
+        <!-- Capítulo 1: Importação -->
         <div class="card">
-            <h3>Importar Extrato Bancário</h3>
-            <div class="upload-zone">
-                <p style="margin-bottom: 10px; font-weight: 600;">Selecione o arquivo Excel / CSV do seu extrato:</p>
-                <input type="file" id="inputExtrato" accept=".csv, .xlsx, .xls">
+            <div class="card-header-editorial">
+                <span class="card-number">01</span>
+                <h2>Importação de Extrato Bancário</h2>
             </div>
-            <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center;">
+            <div class="upload-zone" onclick="document.getElementById('inputExtrato').click()">
+                <p style="margin-bottom: 8px; font-weight: 700; color: var(--primary); font-size: 0.95rem;">📂 Clique ou arraste o arquivo Excel / CSV do extrato</p>
+                <p style="font-size: 0.8rem; color: var(--text-muted);">Suporte automático a planilhas bancárias e formatos tabulares</p>
+                <input type="file" id="inputExtrato" accept=".csv, .xlsx, .xls" style="display: none;">
+            </div>
+            <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <button class="btn btn-secondary" onclick="carregarExemplo()">⚡ Carregar Dados de Exemplo</button>
-                <button class="btn btn-secondary" onclick="limparTudo()">🗑️ Limpar Todos</button>
+                <button class="btn btn-secondary" onclick="limparTudo()">🗑️ Limpar Todos os Registros</button>
             </div>
         </div>
 
-        <!-- Classificação dos Lançamentos -->
+        <!-- Capítulo 2: Classificação -->
         <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h3>Classificação dos Lançamentos</h3>
+            <div class="card-header-editorial" style="justify-content: space-between;">
+                <div style="display: flex; align-items: baseline; gap: 12px;">
+                    <span class="card-number">02</span>
+                    <h2>Classificação de Lançamentos</h2>
+                </div>
                 <button class="btn" onclick="adicionarLinhaManual()">+ Adicionar Item</button>
             </div>
             
-            <table id="tabelaLancamentos">
-                <thead>
-                    <tr>
-                        <th>Descrição</th>
-                        <th>Categoria DRE</th>
-                        <th class="amount">Valor (R$)</th>
-                        <th style="width: 50px; text-align: center;">Ação</th>
-                    </tr>
-                </thead>
-                <tbody id="bodyLancamentos">
-                    <!-- Linhas do extrato -->
-                </tbody>
-            </table>
+            <div class="table-container">
+                <table id="tabelaLancamentos">
+                    <thead>
+                        <tr>
+                            <th>Descrição do Lançamento</th>
+                            <th>Categoria DRE</th>
+                            <th class="amount">Valor (R$)</th>
+                            <th style="width: 40px; text-align: center;">Ação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bodyLancamentos">
+                        <!-- Dados gerados dinamicamente -->
+                    </tbody>
+                </table>
+            </div>
         </div>
 
-        <!-- DRE Consolidada -->
+        <!-- Capítulo 3: DRE Consolidada -->
         <div class="card">
-            <h3>Demonstrativo do Resultado (DRE)</h3>
-            <table id="tableDRE">
-                <tbody id="bodyDRE">
-                    <!-- Tabela calculada -->
-                </tbody>
-            </table>
+            <div class="card-header-editorial">
+                <span class="card-number">03</span>
+                <h2>Demonstrativo do Resultado (DRE)</h2>
+            </div>
+            <div class="table-container">
+                <table id="tableDRE">
+                    <tbody id="bodyDRE">
+                        <!-- DRE calculada -->
+                    </tbody>
+                </table>
+            </div>
             <div class="actions">
-                <button class="btn" onclick="exportarExcel()">📥 Exportar DRE para Excel</button>
+                <button class="btn" onclick="exportarExcel()">📥 Exportar Relatório DRE para Excel</button>
             </div>
         </div>
 
@@ -180,7 +279,6 @@
     <script>
         let lancamentos = [];
 
-        // Leitura automática do arquivo ao selecionar
         document.getElementById('inputExtrato').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -227,17 +325,17 @@
             lancamentos.forEach((item, index) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><input type="text" value="${item.descricao}" onchange="atualizarItem(${index}, 'descricao', this.value)" style="width: 100%; border: 1px solid #CBD5E1; padding: 4px; border-radius: 4px;"></td>
+                    <td><input type="text" value="${item.descricao}" onchange="atualizarItem(${index}, 'descricao', this.value)" style="width: 100%;"></td>
                     <td>
-                        <select onchange="atualizarItem(${index}, 'categoria', this.value)" style="width: 100%; border: 1px solid #CBD5E1; padding: 4px; border-radius: 4px;">
+                        <select onchange="atualizarItem(${index}, 'categoria', this.value)" style="width: 100%;">
                             <option value="RECEITA" ${item.categoria === 'RECEITA' ? 'selected' : ''}>Receita Operacional</option>
                             <option value="DEDUCAO" ${item.categoria === 'DEDUCAO' ? 'selected' : ''}>Deduções / Impostos</option>
                             <option value="CUSTO" ${item.categoria === 'CUSTO' ? 'selected' : ''}>Custos Operacionais</option>
                             <option value="DESPESA" ${item.categoria === 'DESPESA' ? 'selected' : ''}>Despesas Operacionais</option>
                         </select>
                     </td>
-                    <td class="amount"><input type="number" step="0.01" value="${item.valor}" onchange="atualizarItem(${index}, 'valor', parseFloat(this.value) || 0)" style="width: 100px; text-align: right; border: 1px solid #CBD5E1; padding: 4px; border-radius: 4px;"></td>
-                    <td style="text-align: center;"><button onclick="removerItem(${index})" style="background: none; border: none; color: var(--danger); cursor: pointer; font-weight: bold;">✕</button></td>
+                    <td class="amount"><input type="number" step="0.01" value="${item.valor}" onchange="atualizarItem(${index}, 'valor', parseFloat(this.value) || 0)" style="width: 110px; text-align: right;"></td>
+                    <td style="text-align: center;"><button onclick="removerItem(${index})" style="background: none; border: none; color: var(--danger); cursor: pointer; font-weight: bold; font-size: 1.1rem;" title="Remover">✕</button></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -249,7 +347,7 @@
         }
 
         function adicionarLinhaManual() {
-            lancamentos.push({ descricao: 'Novo Item', categoria: 'RECEITA', valor: 0 });
+            lancamentos.push({ descricao: 'Novo Item Gerencial', categoria: 'RECEITA', valor: 0 });
             renderizarTabela();
             recalcularDRE();
         }
@@ -269,10 +367,10 @@
 
         function carregarExemplo() {
             lancamentos = [
-                { descricao: 'Venda de Serviços', categoria: 'RECEITA', valor: 150000 },
-                { descricao: 'Impostos sobre Serviços (ISS/Simples)', categoria: 'DEDUCAO', valor: 12000 },
-                { descricao: 'Custos com Insumos / Sistemas', categoria: 'CUSTO', valor: 20200 },
-                { descricao: 'Despesas com Pessoal e Aluguel', categoria: 'DESPESA', valor: 49150 }
+                { descricao: 'Faturamento de Consultoria / Serviços', categoria: 'RECEITA', valor: 150000 },
+                { descricao: 'Impostos sobre Serviços (Simples Nacional / ISS)', categoria: 'DEDUCAO', valor: 12000 },
+                { descricao: 'Custos com Ferramentas e Nuvem', categoria: 'CUSTO', valor: 20200 },
+                { descricao: 'Folha de Pagamento, Pró-labore e Aluguel', categoria: 'DESPESA', valor: 49150 }
             ];
             renderizarTabela();
             recalcularDRE();
@@ -307,11 +405,11 @@
             const bodyDRE = document.getElementById('bodyDRE');
             bodyDRE.innerHTML = `
                 <tr class="dre-header"><td>(+) RECEITA OPERACIONAL BRUTA</td><td class="amount">${fmt(receita)}</td><td class="amount">100.0%</td></tr>
-                <tr><td style="padding-left: 2rem;">(-) DEDUÇÕES E IMPOSTOS</td><td class="amount">${fmt(deducao)}</td><td class="amount">${pct(deducao, receita)}</td></tr>
+                <tr><td style="padding-left: 1.8rem;">(-) DEDUÇÕES E IMPOSTOS SOBRE VENDAS</td><td class="amount">${fmt(deducao)}</td><td class="amount">${pct(deducao, receita)}</td></tr>
                 <tr class="dre-subtotal"><td>(=) RECEITA OPERACIONAL LÍQUIDA</td><td class="amount">${fmt(receitaLiquida)}</td><td class="amount">${pct(receitaLiquida, receita)}</td></tr>
-                <tr><td style="padding-left: 2rem;">(-) CUSTOS OPERACIONAIS</td><td class="amount">${fmt(custo)}</td><td class="amount">${pct(custo, receita)}</td></tr>
+                <tr><td style="padding-left: 1.8rem;">(-) CUSTOS OPERACIONAIS DOS SERVIÇOS</td><td class="amount">${fmt(custo)}</td><td class="amount">${pct(custo, receita)}</td></tr>
                 <tr class="dre-subtotal"><td>(=) LUCRO BRUTO OPERACIONAL</td><td class="amount">${fmt(lucroBruto)}</td><td class="amount">${pct(lucroBruto, receita)}</td></tr>
-                <tr><td style="padding-left: 2rem;">(-) DESPESAS OPERACIONAIS</td><td class="amount">${fmt(despesa)}</td><td class="amount">${pct(despesa, receita)}</td></tr>
+                <tr><td style="padding-left: 1.8rem;">(-) DESPESAS OPERACIONAIS E ADMINISTRATIVAS</td><td class="amount">${fmt(despesa)}</td><td class="amount">${pct(despesa, receita)}</td></tr>
                 <tr class="dre-total">
                     <td>(=) RESULTADO LÍQUIDO DO EXERCÍCIO</td>
                     <td class="amount">${fmt(resultadoLiquido)}</td>
@@ -326,8 +424,8 @@
                 return;
             }
             const table = document.getElementById('tableDRE');
-            const wb = XLSX.utils.table_to_book(table, { sheet: "DRE Consolidada" });
-            XLSX.writeFile(wb, 'DRE_IUS_Contabilidade.xlsx');
+            const wb = XLSX.utils.table_to_book(table, { sheet: "DRE Executiva IUS" });
+            XLSX.writeFile(wb, 'DRE_Revista_IUS_Contabilidade.xlsx');
         }
 
         document.addEventListener("DOMContentLoaded", function() {
