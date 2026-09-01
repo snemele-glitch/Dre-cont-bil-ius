@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IUS Contabilidade | DRE Gerencial Interativa</title>
+    <!-- SheetJS (Excel) com fallback seguro -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary: #0F172A;
+            --primary-light: #1E293B;
+            --gold: #C5A059;
+            --gold-hover: #b08d46;
+            --accent: #2563EB;
+            --bg: #F8FAFC;
+            --surface: #FFFFFF;
+            --text: #0F172A;
+            --text-muted: #64748B;
+            --border: #E2E8F0;
+            --danger: #E11D48;
+            --success: #10B981;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", sans-serif; 
+            background-color: var(--bg); 
+            color: var(--text); 
+            line-height: 1.5; 
+        }
+
+        /* Top Bar & Navigation */
+        .top-bar {
+            background-color: #090d16;
+            color: #94a3b8;
+            font-size: 0.8rem;
+            padding: 0.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .navbar { 
+            background: var(--primary); 
+            color: white; 
+            padding: 1rem 2rem; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            position: sticky; 
+            top: 0; 
+            z-index: 100; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15); 
+            border-bottom: 2px solid var(--gold);
+        }
+        
+        .brand-badge { 
+            font-weight: 800; 
+            font-size: 1.3rem; 
+            letter-spacing: 1.5px; 
+            color: white; 
+            text-decoration: none; 
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .brand-badge span.logo-gold { 
+            color: var(--gold); 
+            border: 1.5px solid var(--gold);
+            padding: 0.1rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        /* Hero Header */
+        .hero { 
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%); 
+            color: white; 
+            padding: 3rem 2rem; 
+            text-align: center; 
+        }
+        .hero h1 { font-size: 2.2rem; margin-bottom: 0.8rem; font-weight: 700; }
+        .hero h1 span { color: var(--gold); }
+        .hero p { max-width: 680px; margin: 0 auto 1.5rem auto; color: #94a3b8; font-size: 1rem; }
+
+        .main-container { max-width: 1180px; margin: -2rem auto 3rem auto; padding: 0 1rem; }
+        
+        .card { 
+            background: var(--surface); 
+            border-radius: 12px; 
+            padding: 1.8rem; 
+            margin-bottom: 1.8rem; 
+            box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.05); 
+            border: 1px solid var(--border); 
+        }
+
+        .card-header-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.2rem;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .card-header-title h2 { font-size: 1.3rem; color: var(--primary); font-weight: 700; }
+
+        /* Form Controls */
+        .client-info-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
+            gap: 1.2rem; 
+            background: #f8fafc; 
+            padding: 1.2rem; 
+            border-radius: 10px; 
+            margin-bottom: 1.5rem; 
+            border: 1px solid var(--border);
+        }
+        .form-group { display: flex; flex-direction: column; gap: 0.4rem; }
+        .form-group label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; }
+        .form-group input { padding: 0.6rem 0.8rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.9rem; background: white; color: var(--text); }
+        .form-group input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(197, 160, 89, 0.2); }
+
+        /* Dashboard KPI Cards */
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.2rem; margin-bottom: 1.5rem; }
+        .kpi-card { 
+            background: white; 
+            border: 1px solid var(--border); 
+            border-top: 4px solid var(--gold); 
+            padding: 1.2rem; 
+            border-radius: 10px; 
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);
+        }
+        .kpi-card.highlight { border-top-color: var(--primary); background: #f8fafc; }
+        .kpi-title { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+        .kpi-value { font-size: 1.35rem; font-weight: 800; margin-top: 0.4rem; color: var(--primary); font-family: monospace; }
+
+        /* Tabs & Buttons */
+        .source-tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; }
+        .tab-btn { background: #e2e8f0; border: none; padding: 0.65rem 1.2rem; border-radius: 6px; cursor: pointer; font-weight: 600; color: var(--text-muted); font-size: 0.9rem; transition: all 0.2s; }
+        .tab-btn.active { background: var(--primary); color: white; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        .btn { 
+            background-color: var(--gold); 
+            color: white; 
+            padding: 0.65rem 1.3rem; 
+            border: none; 
+            border-radius: 6px; 
+            cursor: pointer; 
+            font-weight: 600; 
+            font-size: 0.9rem; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 0.5rem; 
+            text-decoration: none; 
+            transition: background 0.2s;
+        }
+        .btn:hover { background-color: var(--gold-hover); }
+        .btn-primary { background-color: var(--primary); }
+        .btn-primary:hover { background-color: var(--primary-light); }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+        .btn-outline:hover { background: #f1f5f9; }
+        .btn-danger { background-color: var(--danger); padding: 0.35rem 0.6rem; font-size: 0.8rem; border: none; border-radius: 4px; color: white; cursor: pointer; }
+
+        .file-drop { border: 2px dashed var(--gold); border-radius: 10px; padding: 1.5rem; text-align: center; background: #fffdf9; margin-bottom: 1rem; }
+
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin-top: 0.5rem; font-size: 0.9rem; }
+        th, td { padding: 0.75rem 0.9rem; text-align: left; border-bottom: 1px solid var(--border); }
+        th { background-color: #f8fafc; font-weight: 700; color: var(--primary); text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.5px; }
+        
+        td input, td select {
+            width: 100%;
+            padding: 0.4rem 0.6rem;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 0.88rem;
+        }
+
+        .dre-header { background-color: #f8fafc; font-weight: 700; color: var(--primary); }
+        .dre-subtotal { font-weight: 700; background-color: #f1f5f9; color: var(--primary); }
+        .dre-total { font-weight: 800; font-size: 1.05em; background-color: var(--primary); color: white; }
+        .dre-total td { color: white; }
+        .amount { text-align: right; font-family: monospace; font-size: 0.95rem; }
+        .negative { color: var(--danger); }
+
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem; }
+        
+        footer { background: var(--primary); color: #94a3b8; text-align: center; padding: 2.5rem 1rem; font-size: 0.9rem; border-top: 3px solid var(--gold); margin-top: 2rem; }
+        footer strong { color: white; }
+
+        @media print {
+            .no-print, .top-bar, .navbar, .hero, footer { display: none !important; }
+            body { padding: 0; background: white; font-size: 10pt; }
+            .main-container { margin: 0; max-width: 100%; }
+            .card { box-shadow: none; border: none; padding: 0; margin-bottom: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-bar no-print">
+        <span>📍 IUS Contabilidade & Gestão de Negócios Digitais</span>
+        <span>✉️ contato@iuscontabilidade.com.br</span>
+    </div>
+
+    <nav class="navbar">
+        <a href="#" class="brand-badge">
+            <span class="logo-gold">IUS</span> CONTABILIDADE
+        </a>
+    </nav>
+
+    <header class="hero">
+        <h1>Inteligência Contábil & <span>DRE Interativa</span></h1>
+        <p>Gere e analise o Demonstrativo do Resultado do Exercício de forma dinâmica e profissional.</p>
+    </header>
+
+    <main class="main-container">
+        
+        <!-- Cartão de Dados da Empresa e KPIs -->
+        <div class="card">
+            <div class="card-header-title">
+                <h2>Relatório Executivo & DRE Gerencial</h2>
+                <span style="font-size: 0.85rem; color: var(--gold); font-weight: 700;">IUS CONTABILIDADE</span>
+            </div>
+            
+            <div class="client-info-grid">
+                <div class="form-group">
+                    <label>Empresa / Cliente:</label>
+                    <input type="text" id="infoCliente" value="Empresa Exemplo LTDA">
+                </div>
+                <div class="form-group">
+                    <label>CNPJ:</label>
+                    <input type="text" id="infoCNPJ" value="00.000.000/0001-00">
+                </div>
+                <div class="form-group">
+                    <label>Competência / Período:</label>
+                    <input type="text" id="infoPeriodo" value="Agosto / 2026">
+                </div>
+                <div class="form-group">
+                    <label>Responsável Técnico:</label>
+                    <input type="text" id="infoCRC" value="IUS Contabilidade (CRC MG)">
+                </div>
+            </div>
+
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-title">Receita Bruta</div>
+                    <div class="kpi-value" id="kpiReceitaBruta">R$ 0,00</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Receita Líquida</div>
+                    <div class="kpi-value" id="kpiReceitaLiquida">R$ 0,00</div>
+                </div>
+                <div class="kpi-card">
+                    <div class="kpi-title">Lucro Bruto</div>
+                    <div class="kpi-value" id="kpiLucroBruto">R$ 0,00</div>
+                </div>
+                <div class="kpi-card highlight">
+                    <div class="kpi-title">Resultado Líquido (Margem)</div>
+                    <div class="kpi-value" id="kpiResultadoLiquido" style="color: var(--gold);">R$ 0,00 (0.0%)</div>
+                </div>
+            </div>
+
+            <!-- Abas de Entrada -->
+            <div class="no-print">
+                <h3 style="font-size: 1rem; margin-bottom: 0.5rem; color: var(--primary);">Origem das Informações</h3>
+                <div class="source-tabs">
+                    <button class="tab-btn active" onclick="switchTab(event, 'extrato')">📁 Extrato Bancário</button>
+                    <button class="tab-btn" onclick="switchTab(event, 'dominio')">🏢 Sistema Domínio</button>
+                    <button class="tab-btn" onclick="switchTab(event, 'manual')">✍️ Lançamento Manual</button>
+                </div>
+
+                <div id="tab-extrato" class="tab-content active">
+                    <div class="file-drop">
+                        <p style="font-weight: 600; color: var(--primary);">Selecione o arquivo Excel / CSV do seu extrato bancário:</p>
+                        <input type="file" id="fileExtrato" accept=".xlsx, .xls, .csv" style="margin-top: 0.5rem;">
+                    </div>
+                    <button class="btn btn-outline" onclick="carregarExemploExtrato()">⚡ Carregar Dados de Exemplo</button>
+                </div>
+
+                <div id="tab-dominio" class="tab-content">
+                    <div class="file-drop">
+                        <p style="font-weight: 600; color: var(--primary);">Importe o relatório exportado do Sistema Domínio:</p>
+                        <input type="file" id="fileDominio" accept=".xlsx, .xls, .csv" style="margin-top: 0.5rem;">
+                    </div>
+                    <button class="btn btn-outline" onclick="carregarExemploDominio()">⚡ Carregar Exemplo Domínio</button>
+                </div>
+
+                <div id="tab-manual" class="tab-content">
+                    <p style="margin-bottom: 0.5rem; color: var(--text-muted);">Adicione ou edite os lançamentos individualmente na tabela abaixo:</p>
+                    <button class="btn btn-primary" onclick="adicionarLinhaVazia()">➕ Adicionar Novo Item</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabela de Mapeamento de Contas -->
+        <div class="card no-print">
+            <div class="toolbar">
+                <h3 style="color: var(--primary);">Classificação dos Lançamentos</h3>
+                <div>
+                    <button class="btn btn-primary" onclick="adicionarLinhaVazia()">➕ Adicionar Item</button>
+                    <button class="btn btn-outline" onclick="limparTudo()">🗑️ Limpar Todos</button>
+                </div>
+            </div>
+            
+            <table id="tableLancamentos">
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">Descrição do Lançamento</th>
+                        <th style="width: 35%;">Categoria DRE</th>
+                        <th style="width: 15%; text-align: right;">Valor (R$)</th>
+                        <th style="width: 10%; text-align: center;">Ação</th>
+                    </tr>
+                </thead>
+                <tbody id="bodyLancamentos"></tbody>
+            </table>
+        </div>
+
+        <!-- Tabela Oficial da DRE Interativa -->
+        <div class="card">
+            <div class="toolbar no-print">
+                <h3 style="color: var(--primary);">Demonstração do Resultado do Exercício (DRE)</h3>
+                <div>
+                    <button class="btn btn-outline" onclick="exportarExcel()">📥 Exportar Excel</button>
+                    <button class="btn btn-primary" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+                </div>
+            </div>
+
+            <table id="tableDRE">
+                <thead>
+                    <tr>
+                        <th>Estrutura Contábil / Linha da DRE</th>
+                        <th class="amount" style="width: 25%;">Valor Consolidado (R$)</th>
+                        <th class="amount" style="width: 20%;">Análise Vertical (%)</th>
+                    </tr>
+                </thead>
+                <tbody id="bodyDRE"></tbody>
+            </table>
+        </div>
+
+    </main>
+
+    <footer>
+        <p><strong>IUS CONTABILIDADE & GESTÃO DE NEGÓCIOS DIGITAIS</strong></p>
+        <p style="margin: 0.4rem 0;">Soluções Estratégicas em Inteligência Tributária e Consultoria Financeira</p>
+        <p><small>© 2026 IUS Contabilidade. Todos os direitos reservados.</small></p>
+    </footer>
+
+<script>
+    const CATEGORIAS_DRE = [
+        { id: 'REC_PROD', label: '(+) Receita Bruta - Vendas' },
+        { id: 'REC_SERV', label: '(+) Receita Bruta - Serviços' },
+        { id: 'DED_IMP', label: '(-) Impostos sobre Vendas' },
+        { id: 'DED_DEV', label: '(-) Devoluções e Abatimentos' },
+        { id: 'CUST_MAT', label: '(-) Custos com Produtos/CMV' },
+        { id: 'CUST_SERV', label: '(-) Custos com Serviços Subcontratados' },
+        { id: 'DESP_PES', label: '(-) Despesas com Pessoal / Pró-Labore' },
+        { id: 'DESP_ADM', label: '(-) Despesas Administrativas' },
+        { id: 'DESP_VEN', label: '(-) Despesas de Marketing e Vendas' },
+        { id: 'DESP_FIN', label: '(-) Despesas Financeiras' },
+        { id: 'IGNORAR', label: '🚫 Ignorar Item' }
+    ];
+
+    let lancamentos = [];
+
+    function switchTab(evt, tabName) {
+        if (evt && evt.preventDefault) evt.preventDefault();
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        
+        if (evt && evt.currentTarget) {
+            evt.currentTarget.classList.add('active');
+        }
+        const targetDiv = document.getElementById('tab-' + tabName);
+        if (targetDiv) targetDiv.classList.add('active');
+    }
+
+    function classificarInteligente(descricao, valor) {
+        const d = (descricao || '').toUpperCase();
+        if (d.includes('SIMPLES') || d.includes('DAS') || d.includes('ISS') || d.includes('IMPOSTO')) return 'DED_IMP';
+        if (d.includes('SALARIO') || d.includes('PRO-LABORE') || d.includes('FOLHA') || d.includes('INSS')) return 'DESP_PES';
+        if (d.includes('ALUGUEL') || d.includes('ENERGIA') || d.includes('INTERNET')) return 'DESP_ADM';
+        if (d.includes('ADS') || d.includes('MARKETING') || d.includes('GOOGLE')) return 'DESP_VEN';
+        if (d.includes('TARIFA') || d.includes('BANCO')) return 'DESP_FIN';
+        if (d.includes('FORNECEDOR') || d.includes('COMPRA')) return 'CUST_MAT';
+        if (valor > 0 || d.includes('PIX') || d.includes('RECEBIMENTO')) return d.includes('SERV') ? 'REC_SERV' : 'REC_PROD';
+        return 'DESP_ADM';
+    }
+
+    const fileExtratoEl = document.getElementById('fileExtrato');
+    if (fileExtratoEl) fileExtratoEl.addEventListener('change', e => processarArquivoExcel(e.target.files[0]));
+    
+    const fileDominioEl = document.getElementById('fileDominio');
+    if (fileDominioEl) fileDominioEl.addEventListener('change', e => processarArquivoExcel(e.target.files[0]));
+
+    function processarArquivoExcel(file) {
+        if (!file) return;
+        if (typeof XLSX === 'undefined') {
+            alert("A biblioteca de leitura de Excel ainda está sendo carregada ou não pôde ser baixada. Tente novamente ou use o lançamento manual.");
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const json = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+
+                lancamentos = [];
+                json.forEach((row, idx) => {
+                    if (idx === 0 || row.length < 2) return;
+                    let desc = row[0] || row[1] || 'Lançamento';
+                    let val = parseFloat(row[2] || row[1] || 0);
+                    if (typeof desc === 'string' && !isNaN(val) && val !== 0) {
+                        let cat = classificarInteligente(desc, val);
+                        lancamentos.push({ desc: String(desc).trim(), cat, valor: Math.abs(val) });
+                    }
+                });
+
+                renderizarTabelaLancamentos();
+                recalcularDRE();
+            } catch (err) {
+                alert("Erro ao ler arquivo: " + err.message);
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    }
+
+    function carregarExemploExtrato() {
+        lancamentos = [
+            { desc: 'PIX RECEBIDO - CONSULTORIA TRIBUTÁRIA', cat: 'REC_SERV', valor: 75000 },
+            { desc: 'VENDAS CURSO / SERVIÇOS ONLINE', cat: 'REC_PROD', valor: 95000 },
+            { desc: 'IMPOSTO SIMPLES NACIONAL (DAS)', cat: 'DED_IMP', valor: 14200 },
+            { desc: 'FORNECEDORES DE TECNOLOGIA E SOFTWARES', cat: 'CUST_MAT', valor: 38000 },
+            { desc: 'FOLHA DE PAGAMENTO E PRÓ-LABORE', cat: 'DESP_PES', valor: 35000 },
+            { desc: 'ALUGUEL ESCRITÓRIO & CONDOMÍNIO', cat: 'DESP_ADM', valor: 7200 },
+            { desc: 'ANÚNCIOS META & GOOGLE ADS', cat: 'DESP_VEN', valor: 6500 },
+            { desc: 'TARIFAS BANCÁRIAS E MANUTENÇÃO PJ', cat: 'DESP_FIN', valor: 450 }
+        ];
+        renderizarTabelaLancamentos();
+        recalcularDRE();
+    }
+
+    function carregarExemploDominio() {
+        lancamentos = [
+            { desc: '3.1.01 - Receita Bruta de Vendas', cat: 'REC_PROD', valor: 130000 },
+            { desc: '3.1.02 - Receita Bruta de Serviços', cat: 'REC_SERV', valor: 60000 },
+            { desc: '3.1.03 - Deduções e Impostos', cat: 'DED_IMP', valor: 16800 },
+            { desc: '3.2.01 - Custos CMV', cat: 'CUST_MAT', valor: 58000 },
+            { desc: '3.3.01 - Despesas Operacionais Gerais', cat: 'DESP_ADM', valor: 24000 }
+        ];
+        renderizarTabelaLancamentos();
+        recalcularDRE();
+    }
+
+    function renderizarTabelaLancamentos() {
+        const tbody = document.getElementById('bodyLancamentos');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        if (lancamentos.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">Nenhum lançamento importado no momento.</td></tr>`;
+            return;
+        }
+
+        lancamentos.forEach((item, idx) => {
+            let optionsHtml = CATEGORIAS_DRE.map(c => 
+                `<option value="${c.id}" ${c.id === item.cat ? 'selected' : ''}>${c.label}</option>`
+            ).join('');
+
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" value="${item.desc}" onchange="atualizarItem(${idx}, 'desc', this.value)"></td>
+                <td><select onchange="atualizarItem(${idx}, 'cat', this.value)">${optionsHtml}</select></td>
+                <td><input type="number" step="0.01" value="${item.valor}" onchange="atualizarItem(${idx}, 'valor', parseFloat(this.value)||0)"></td>
+                <td style="text-align: center;"><button class="btn-danger" onclick="removerLinha(${idx})">❌</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function atualizarItem(idx, campo, valor) {
+        if (lancamentos[idx]) {
+            lancamentos[idx][campo] = valor;
+            recalcularDRE();
+        }
+    }
+
+    function adicionarLinhaVazia() {
+        lancamentos.push({ desc: 'Novo Lançamento', cat: 'REC_PROD', valor: 0 });
+        renderizarTabelaLancamentos();
+        recalcularDRE();
+    }
+
+    function removerLinha(idx) {
+        lancamentos.splice(idx, 1);
+        renderizarTabelaLancamentos();
+        recalcularDRE();
+    }
+
+    function limparTudo() {
+        lancamentos = [];
+        renderizarTabelaLancamentos();
+        recalcularDRE();
+    }
+
+    function recalcularDRE() {
+        const totais = {};
+        CATEGORIAS_DRE.forEach(c => totais[c.id] = 0);
+
+        lancamentos.forEach(item => {
+            if (totais[item.cat] !== undefined) totais[item.cat] += (item.valor || 0);
+        });
+
+        const receitaBruta = totais['REC_PROD'] + totais['REC_SERV'];
+        const deducoes = totais['DED_IMP'] + totais['DED_DEV'];
+        const receitaLiquida = receitaBruta - deducoes;
+        const custos = totais['CUST_MAT'] + totais['CUST_SERV'];
+        const lucroBruto = receitaLiquida - custos;
+        const despesas = totais['DESP_PES'] + totais['DESP_ADM'] + totais['DESP_VEN'] + totais['DESP_FIN'];
+        const resultadoLiquido = lucroBruto - despesas;
+
+        function pct(v) { return receitaBruta === 0 ? '0.0%' : ((v / receitaBruta) * 100).toFixed(1) + '%'; }
+        function fmt(v) { return v.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+
+        document.getElementById('kpiReceitaBruta').innerText = `R$ ${fmt(receitaBruta)}`;
+        document.getElementById('kpiReceitaLiquida').innerText = `R$ ${fmt(receitaLiquida)}`;
+        document.getElementById('kpiLucroBruto').innerText = `R$ ${fmt(lucroBruto)}`;
+        document.getElementById('kpiResultadoLiquido').innerText = `R$ ${fmt(resultadoLiquido)} (${pct(resultadoLiquido)})`;
+
+        const bodyDRE = document.getElementById('bodyDRE');
+        if (bodyDRE) {
+            bodyDRE.innerHTML = `
+                <tr class="dre-header"><td>(+) RECEITA OPERACIONAL BRUTA</td><td class="amount">${fmt(receitaBruta)}</td><td class="amount">100.0%</td></tr>
+                <tr><td style="padding-left: 2rem;">Venda de Produtos</td><td class="amount">${fmt(totais['REC_PROD'])}</td><td class="amount">${pct(totais['REC_PROD'])}</td></tr>
+                <tr><td style="padding-left: 2rem;">Prestação de Serviços</td><td class="amount">${fmt(totais['REC_SERV'])}</td><td class="amount">${pct(totais['REC_SERV'])}</td></tr>
+
+                <tr class="dre-header"><td>(-) DEDUÇÕES E IMPOSTOS SOBRE VENDAS</td><td class="amount negative">-${fmt(deducoes)}</td><td class="amount negative">-${pct(deducoes)}</td></tr>
+                <tr class="dre-subtotal"><td>(=) RECEITA OPERACIONAL LÍQUIDA</td><td class="amount">${fmt(receitaLiquida)}</td><td class="amount">${pct(receitaLiquida)}</td></tr>
+
+                <tr class="dre-header"><td>(-) CUSTOS OPERACIONAIS (CMV / CPV)</td><td class="amount negative">-${fmt(custos)}</td><td class="amount negative">-${pct(custos)}</td></tr>
+                <tr class="dre-subtotal"><td>(=) LUCRO BRUTO OPERACIONAL</td><td class="amount">${fmt(lucroBruto)}</td><td class="amount">${pct(lucroBruto)}</td></tr>
+
+                <tr class="dre-header"><td>(-) DESPESAS OPERACIONAIS</td><td class="amount negative">-${fmt(despesas)}</td><td class="amount negative">-${pct(despesas)}</td></tr>
+                <tr class="dre-total">
+                    <td>(=) RESULTADO LÍQUIDO DO EXERCÍCIO</td>
+                    <td class="amount">${fmt(resultadoLiquido)}</td>
+                    <td class="amount">${pct(resultadoLiquido)}</td>
+                </tr>
+            `;
+        }
+    }
+
+    function exportarExcel() {
+        if (typeof XLSX === 'undefined') {
+            alert("A biblioteca SheetJS não está disponível no momento para exportar.");
+            return;
+        }
+        const table = document.getElementById('tableDRE');
+        const clienteInput = document.getElementById('infoCliente');
+        const nomeCliente = clienteInput ? clienteInput.value : 'Cliente';
+        const wb = XLSX.utils.table_to_book(table, { sheet: "DRE" });
+        XLSX.writeFile(wb, `DRE_${nomeCliente}.xlsx`);
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        carregarExemploExtrato();
+    });
+    if (document.readyState === "complete" || document.readyState === "interactive") {
+        carregarExemploExtrato();
+    }
+</script>
+</body>
+</html>
