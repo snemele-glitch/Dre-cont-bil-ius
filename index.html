@@ -1,713 +1,184 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Construtor, Importador e Simulador de DRE | IUS Contabilidade</title>
-<!-- SheetJS para leitura de arquivos Excel (.xlsx, .xls) e CSV no navegador -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<style>
-  :root{
-    --navy:#15326C;
-    --navy-dark:#0E2350;
-    --navy-mid:#173867;
-    --teal:#2B97C7;
-    --teal-light:#66BECA;
-    --paper:#F6F8FA;
-    --paper-warm:#F1F4F6;
-    --ink:#1C2B39;
-    --ink-soft:#4B5C6B;
-    --line:#D8E1E7;
-    --ok:#2E7D5B;
-    --ok-bg:#EAF5EF;
-    --serif: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'URW Palladio L', serif;
-    --sans: -apple-system, 'Segoe UI', Calibri, Roboto, Helvetica, Arial, sans-serif;
-  }
-  *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
-  body{
-    font-family:var(--sans);
-    color:var(--ink);
-    background:var(--paper);
-    scroll-behavior:smooth;
-  }
-  @media (prefers-reduced-motion: reduce){
-    *{animation:none !important; transition:none !important; scroll-behavior:auto !important;}
-  }
+import pandas as pd
+import streamlit as st
 
-  .book{
-    height:100vh;
-    overflow-y:auto;
-    scroll-snap-type:y mandatory;
-  }
-  .page{
-    min-height:100vh;
-    width:100%;
-    scroll-snap-align:start;
-    display:flex;
-    flex-direction:column;
-    justify-content:center;
-    position:relative;
-    padding:76px 8vw 76px;
-  }
-  .page-inner{ max-width:1040px; margin:0 auto; width:100%; }
+st.set_page_config(
+    layout="wide", page_title="Conciliação Contábil & DRE Dinâmica"
+)
 
-  .kicker{
-    font-family:var(--sans);
-    font-size:12px;
-    font-weight:700;
-    letter-spacing:.16em;
-    text-transform:uppercase;
-    color:var(--teal);
-    margin:0 0 14px;
-  }
-  h1,h2{
-    font-family:var(--serif);
-    color:var(--navy);
-    margin:0 0 14px;
-    line-height:1.12;
-  }
-  h1{ font-size:clamp(32px,5.2vw,54px); font-weight:400; }
-  h2{ font-size:clamp(24px,3.4vw,36px); font-weight:400; }
-  p{ font-size:16px; line-height:1.6; color:var(--ink-soft); margin:0 0 14px; }
-  .lede{ font-size:18px; color:var(--ink); max-width:680px; }
+st.title("Painel de Conciliação e DRE em Tempo Real")
 
-  /* ---------- Page nav dots ---------- */
-  .pagenav{
-    position:fixed; right:22px; top:50%; transform:translateY(-50%);
-    z-index:50; display:flex; flex-direction:column; gap:12px;
-  }
-  .pagenav button{
-    width:9px; height:9px; border-radius:50%;
-    border:1.5px solid var(--navy); background:transparent;
-    cursor:pointer; padding:0; opacity:.5;
-    transition:opacity .25s, background .25s, transform .25s;
-  }
-  .pagenav button.active{ opacity:1; background:var(--teal); border-color:var(--teal); transform:scale(1.3); }
-  .pagecounter{
-    position:fixed; left:22px; bottom:20px; z-index:50;
-    font-size:12px; letter-spacing:.08em; color:var(--ink-soft);
-  }
-  .pagecounter b{ color:var(--navy); }
-  @media (max-width:720px){
-    .pagenav{ right:10px; gap:8px; }
-    .pagecounter{ left:12px; bottom:12px; font-size:10px; }
-    .page{ padding:60px 5vw 80px; }
-  }
 
-  .scrolldown{
-    margin-top:34px; display:inline-flex; align-items:center; gap:8px;
-    font-size:12px; letter-spacing:.1em; text-transform:uppercase; color:var(--teal-light);
-    animation:bob 2s ease-in-out infinite;
-  }
-  @keyframes bob{ 0%,100%{transform:translateY(0);} 50%{transform:translateY(6px);} }
+@st.cache_data
+def carregar_dados_padrao():
+  return pd.DataFrame({
+      "id": [1, 2, 3, 4, 5, 6],
+      "data": [
+          "2026-03-01",
+          "2026-03-02",
+          "2026-03-03",
+          "2026-03-04",
+          "2026-03-05",
+          "2026-03-06",
+      ],
+      "descricao": [
+          "Cliente A - Prestação de Serviço",
+          "Fornecedor de Insumos",
+          "Aluguel do Escritório",
+          "Sistema de Gestão (SaaS)",
+          "Cliente B - Honorários",
+          "Tarifa Bancária",
+      ],
+      "debito": [0.0, 1800.0, 2200.0, 350.0, 0.0, 80.0],
+      "credito": [6500.0, 0.0, 0.0, 0.0, 4500.0, 0.0],
+      "classificacao": [
+          "Receita",
+          "Custo",
+          "Despesa",
+          "Despesa",
+          "Receita",
+          "Despesa",
+      ],
+  })
 
-  /* ---------- COVER ---------- */
-  #cover{
-    background:linear-gradient(160deg, var(--navy-dark) 0%, var(--navy) 58%, var(--navy-mid) 100%);
-    color:#fff;
-  }
-  #cover .kicker{ color:var(--teal-light); }
-  #cover h1{ color:#fff; max-width:820px; }
-  #cover h1 em{ font-style:italic; color:var(--teal-light); }
-  #cover .lede{ color:#D8E7ED; }
-  .cover-tag{
-    display:inline-block; margin-top:28px; padding:8px 16px;
-    border:1px solid rgba(255,255,255,.28); border-radius:2px;
-    font-size:13px; color:#EAF3F6; letter-spacing:.02em;
-  }
 
-  /* ---------- CONSTRUTOR & IMPORTADOR DE DRE ---------- */
-  #construtor{ background:var(--paper-warm); }
-  .builder-grid{
-    display:grid; grid-template-columns:1.15fr 1fr; gap:24px; align-items:start;
-  }
-  @media (max-width:900px){ .builder-grid{ grid-template-columns:1fr; } }
+# Sidebar para upload de arquivos
+st.sidebar.header("📁 Importação de Dados")
+arquivo_upload = st.sidebar.file_uploader(
+    "Envie o arquivo CSV ou Excel (Extrato ou Domínio)",
+    type=["csv", "xlsx", "xls"],
+)
 
-  .builder-col{ display:flex; flex-direction:column; gap:16px; }
+if "extrato" not in st.session_state:
+  st.session_state.extrato = carregar_dados_padrao()
 
-  .input-card{
-    background:#fff; border:1px solid var(--line); border-radius:6px; padding:18px 20px;
-  }
-  .input-card h3{
-    font-family:var(--serif); font-size:17px; color:var(--navy); margin-top:0; margin-bottom:10px;
-  }
-  .file-drop-zone{
-    border:2px dashed var(--teal); border-radius:4px; padding:12px; text-align:center;
-    background:var(--paper); cursor:pointer; transition:background .2s; margin-bottom:10px;
-  }
-  .file-drop-zone:hover{ background:var(--ok-bg); }
-  .file-drop-zone input{ display:none; }
-  .file-label{ font-size:13px; color:var(--navy); font-weight:600; display:block; word-break:break-all; }
-  .file-hint{ font-size:11.5px; color:var(--ink-soft); margin-top:2px; }
+if arquivo_upload is not None:
+  try:
+    if arquivo_upload.name.endswith(".csv"):
+      df_novo = pd.read_csv(arquivo_upload)
+    else:
+      df_novo = pd.read_excel(arquivo_upload)
 
-  .card-actions{
-    display:flex; gap:8px; margin-bottom:10px;
-  }
-  .btn-process{
-    flex:1; background:var(--teal); color:#fff; border:none; border-radius:4px;
-    padding:9px 14px; font-size:13px; font-weight:700; cursor:pointer;
-    transition:background .2s;
-  }
-  .btn-process:hover{ background:#227fa8; }
-  .btn-clear{
-    background:#e2e8f0; color:var(--ink); border:none; border-radius:4px;
-    padding:9px 14px; font-size:13px; font-weight:600; cursor:pointer;
-    transition:background .2s;
-  }
-  .btn-clear:hover{ background:#cbd5e1; }
+    if "id" not in df_novo.columns:
+      df_novo.insert(0, "id", range(1, len(df_novo) + 1))
+    if "classificacao" not in df_novo.columns:
+      df_novo["classificacao"] = "Despesa"
 
-  .fields-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-  @media (max-width:500px){ .fields-grid{ grid-template-columns:1fr; } }
+    st.session_state.extrato = df_novo
+    st.sidebar.success("Arquivo importado com sucesso!")
+  except Exception as e:
+    st.sidebar.error(f"Erro ao processar o arquivo: {e}")
 
-  .field-group{ margin-bottom:10px; }
-  .field-group label{
-    display:block; font-size:11.5px; font-weight:700; text-transform:uppercase;
-    letter-spacing:.04em; color:var(--ink-soft); margin-bottom:3px;
-  }
-  .field-group input{
-    width:100%; padding:8px 12px; border:1px solid var(--line); border-radius:4px;
-    font-size:14.5px; font-family:var(--sans); color:var(--navy); background:var(--paper);
-    transition:border-color .2s, background .2s;
-  }
-  .field-group input:focus{
-    outline:none; border-color:var(--teal); background:#fff;
-  }
+df = st.session_state.extrato
 
-  .dre-output{
-    background:var(--navy); color:#fff; border-radius:6px; padding:22px; position:sticky; top:20px;
-  }
-  .dre-output h3{
-    font-family:var(--serif); font-size:18px; color:var(--teal-light); margin-top:0; margin-bottom:14px;
-    border-bottom:1px solid rgba(255,255,255,.15); padding-bottom:8px;
-  }
-  .dre-row{
-    display:flex; justify-content:space-between; align-items:center;
-    padding:7px 0; border-bottom:1px solid rgba(255,255,255,.08);
-    font-size:13.5px;
-  }
-  .dre-row.total{
-    border-top:1.5px solid var(--teal-light); border-bottom:none;
-    margin-top:8px; padding-top:10px; font-weight:700; font-size:15px; color:#fff;
-  }
-  .dre-row span:last-child{ font-family:var(--serif); font-size:15px; }
-  .dre-row.total span:last-child{ font-size:18px; color:var(--teal-light); }
-  .import-status{
-    font-size:11.5px; color:var(--teal); margin-top:4px; font-style:italic; min-height:16px; font-weight:600;
-  }
+# Tratamento de colunas de Débito e Crédito
+if "debito" not in df.columns and "credito" not in df.columns:
+  if "valor" in df.columns:
+    df["debito"] = df["valor"].apply(lambda x: abs(x) if x < 0 else 0.0)
+    df["credito"] = df["valor"].apply(lambda x: x if x > 0 else 0.0)
+  else:
+    df["debito"] = 0.0
+    df["credito"] = 0.0
 
-  /* ---------- PILARES ---------- */
-  .pillar-grid{ display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:6px; }
-  @media (max-width:720px){ .pillar-grid{ grid-template-columns:1fr; } }
-  .pillar{ perspective:1400px; height:190px; cursor:pointer; }
-  .pillar-inner{
-    position:relative; width:100%; height:100%;
-    transition:transform .6s cubic-bezier(.4,0,.2,1); transform-style:preserve-3d;
-  }
-  .pillar.flip .pillar-inner{ transform:rotateY(180deg); }
-  .pillar-face{
-    position:absolute; inset:0; backface-visibility:hidden;
-    border-radius:6px; padding:20px; display:flex; flex-direction:column; justify-content:center;
-  }
-  .pillar-front{ background:#fff; border:1px solid var(--line); }
-  .pillar-front .p-eyebrow{ font-size:11.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--teal); margin-bottom:8px; }
-  .pillar-front .p-name{ font-family:var(--serif); font-size:21px; color:var(--navy); }
-  .pillar-front .p-hint{ margin-top:auto; font-size:12px; color:var(--ink-soft); }
-  .pillar-back{ background:var(--navy); color:#EAF3F6; transform:rotateY(180deg); font-size:14px; line-height:1.5; }
+# Painel Superior: Movimentação de Débito e Crédito
+total_credito = df["credito"].sum()
+total_debito = df["debito"].sum()
+saldo_liquido_mov = total_credito - total_debito
 
-  /* ---------- MATRIZ ---------- */
-  .matrix-wrap{ overflow-x:auto; margin-top:6px; border:1px solid var(--line); border-radius:6px; }
-  table{ width:100%; border-collapse:collapse; font-size:14px; min-width:620px; }
-  thead th{
-    text-align:left; background:var(--navy); color:#fff;
-    padding:12px 16px; font-weight:600; font-size:12.5px; letter-spacing:.03em;
-  }
-  thead th:first-child{ color:var(--teal-light); }
-  tbody td{ padding:12px 16px; border-top:1px solid var(--line); color:var(--ink); vertical-align:top; }
-  tbody tr:nth-child(odd){ background:var(--paper-warm); }
-  tbody td:first-child{ color:var(--ink-soft); font-size:12.5px; font-weight:600; white-space:nowrap; }
+col_m1, col_m2, col_m3 = st.columns(3)
+col_m1.metric("Total Entradas (Crédito)", f"R$ {total_credito:,.2f}")
+col_m2.metric("Total Saídas (Débito)", f"R$ {total_debito:,.2f}")
+col_m3.metric(
+    "Saldo Líquido no Período",
+    f"R$ {saldo_liquido_mov:,.2f}",
+    delta=(
+        "Positivo" if saldo_liquido_mov >= 0 else "Negativo (Saídas maiores)"
+    ),
+)
 
-  /* ---------- CTA / WHATSAPP ---------- */
-  #cta{ background:linear-gradient(160deg, var(--navy) 0%, var(--navy-dark) 100%); color:#fff; }
-  #cta .kicker{ color:var(--teal-light); }
-  #cta h2{ color:#fff; }
-  .whatsapp-btn{
-    display:inline-flex; align-items:center; gap:10px; margin-top:24px;
-    background:#25D366; color:#fff; text-decoration:none; padding:16px 32px;
-    border-radius:4px; font-size:16px; font-weight:700; border:none; cursor:pointer;
-    transition:background .2s, transform .2s; box-shadow:0 4px 12px rgba(37,211,102,.3);
-  }
-  .whatsapp-btn:hover{ background:#20ba5a; transform:translateY(-1px); }
-  .whatsapp-btn svg{ width:22px; height:22px; fill:#fff; }
-  .cta-note{ margin-top:16px; max-width:560px; color:#C6D7DF; font-size:14px; }
-  .cta-foot{ margin-top:40px; font-size:12px; color:#9DB4C0; border-top:1px solid rgba(255,255,255,.15); padding-top:14px; }
-  .signature{ font-family:var(--serif); font-style:italic; color:var(--teal-light); margin-top:4px; font-size:14px; }
-</style>
-</head>
-<body>
+st.markdown("---")
 
-<nav class="pagenav" id="pagenav"></nav>
-<div class="pagecounter" id="pagecounter">Página <b>1</b> de 5</div>
+# Layout de Duas Colunas: Esquerda (Extrato / Classificação) | Direita (DRE)
+col_tabela, col_dre = st.columns([1.6, 1], gap="large")
 
-<div class="book" id="book">
+with col_tabela:
+  st.subheader("1. Painel de Movimentação e Classificação")
+  st.markdown(
+      "Classifique cada linha como **Receita**, **Custo**, **Despesa** ou"
+      " **Ignorar** para alimentar a DRE em tempo real."
+  )
 
-  <!-- CAPA -->
-  <section class="page" id="cover" data-title="Capa">
-    <div class="page-inner">
-      <p class="kicker">IUS Contabilidade · Importador & Simulador de DRE</p>
-      <h1>Domínio da DRE:<br><em>Importe relatórios, processe dados e gere seu resultado.</em></h1>
-      <p class="lede">Ferramenta interativa com importação correta de Domínio e Extratos Bancários por colunas de valores, débito e crédito.</p>
-      <span class="cover-tag">5 páginas interativas</span>
-      <div class="scrolldown">role para começar ↓</div>
-    </div>
-  </section>
+  edited_df = st.data_editor(
+      df,
+      column_config={
+          "id": None,
+          "data": st.column_config.TextColumn("Data", width="small"),
+          "descricao": st.column_config.TextColumn("Descrição", width="medium"),
+          "debito": st.column_config.NumberColumn(
+              "Débito (R$)", format="R$ %.2f"
+          ),
+          "credito": st.column_config.NumberColumn(
+              "Crédito (R$)", format="R$ %.2f"
+          ),
+          "classificacao": st.column_config.SelectboxColumn(
+              "Classificação",
+              help="Defina a natureza contábil do lançamento",
+              options=["Receita", "Custo", "Despesa", "Ignorar"],
+              required=True,
+          ),
+      },
+      disabled=[
+          col for col in df.columns if col not in ["classificacao", "observacao"]
+      ],
+      hide_index=True,
+      key="editor_movimentacao_completo",
+      use_container_width=True,
+  )
 
-  <!-- CONSTRUTOR E IMPORTADOR DE DRE -->
-  <section class="page" id="construtor" data-title="Importador & DRE">
-    <div class="page-inner">
-      <p class="kicker">Página 2 · Importador e Construtor de DRE</p>
-      <h2>Carregue cada arquivo no campo correto</h2>
-      <p>Use o <b>Card 1</b> para relatórios de Vendas/Domínio e o <b>Card 2</b> para o Extrato Bancário de Despesas.</p>
+  st.session_state.extrato = edited_df
 
-      <div class="builder-grid">
-        <div class="builder-col">
-          <!-- Card 1: Domínio / Vendas -->
-          <div class="input-card">
-            <h3>1. Relatório Domínio (Vendas / CFOPs)</h3>
-            <div class="file-drop-zone" onclick="document.getElementById('fileDominio').click()">
-              <span class="file-label" id="labelDominio">📁 Clique para selecionar relatório do Domínio (.xlsx/.csv)</span>
-              <span class="file-hint">Procura colunas de Valor Contábil ou Vendas</span>
-              <input type="file" id="fileDominio" accept=".xlsx, .xls, .csv">
-            </div>
-            <div class="card-actions">
-              <button type="button" class="btn-process" id="btnProcessarDominio">▶ Processar Domínio</button>
-              <button type="button" class="btn-clear" id="btnLimparDominio">Limpar</button>
-            </div>
-            <div class="import-status" id="statusDominio">Nenhum arquivo carregado.</div>
-            
-            <div class="fields-grid" style="margin-top:10px;">
-              <div class="field-group">
-                <label for="inpReceita">Receita Bruta (R$)</label>
-                <input type="number" id="inpReceita" value="100000" step="100">
-              </div>
-              <div class="field-group">
-                <label for="inpImpostos">(-) Impostos s/ Vendas (R$)</label>
-                <input type="number" id="inpImpostos" value="10000" step="100">
-              </div>
-            </div>
-          </div>
+with col_dre:
+  st.subheader("2. DRE Dinâmica")
 
-          <!-- Card 2: Extrato Bancário / Despesas -->
-          <div class="input-card">
-            <h3>2. Extrato Bancário / Despesas (CSV ou Excel)</h3>
-            <div class="file-drop-zone" onclick="document.getElementById('fileExtrato').click()">
-              <span class="file-label" id="labelExtrato">📁 Clique para selecionar o Extrato Bancário</span>
-              <span class="file-hint">Soma débitos e saídas como despesas</span>
-              <input type="file" id="fileExtrato" accept=".xlsx, .xls, .csv">
-            </div>
-            <div class="card-actions">
-              <button type="button" class="btn-process" id="btnProcessarExtrato">▶ Processar Extrato</button>
-              <button type="button" class="btn-clear" id="btnLimparExtrato">Limpar</button>
-            </div>
-            <div class="import-status" id="statusExtrato">Nenhum extrato carregado.</div>
+  df_atual = st.session_state.extrato
 
-            <div class="fields-grid" style="margin-top:10px;">
-              <div class="field-group">
-                <label for="inpCustoVar">(-) Custos Variáveis / CMV (R$)</label>
-                <input type="number" id="inpCustoVar" value="35000" step="100">
-              </div>
-              <div class="field-group">
-                <label for="inpDespFixas">(-) Despesas Fixas (R$)</label>
-                <input type="number" id="inpDespFixas" value="40000" step="100">
-              </div>
-            </div>
-          </div>
-        </div>
+  receita_bruta = df_atual[df_atual["classificacao"] == "Receita"][
+      "credito"
+  ].sum() - df_atual[df_atual["classificacao"] == "Receita"]["debito"].sum()
+  custos = df_atual[df_atual["classificacao"] == "Custo"]["debito"].sum()
+  despesas = df_atual[df_atual["classificacao"] == "Despesa"]["debito"].sum()
 
-        <!-- DRE Calculada em Tempo Real -->
-        <div>
-          <div class="dre-output">
-            <h3>DRE Gerencial Apurada</h3>
-            <div class="dre-row"><span>Receita Bruta</span><span id="outReceita">R$ 100.000,00</span></div>
-            <div class="dre-row"><span>(-) Deduções / Impostos</span><span id="outImpostos">R$ 10.000,00</span></div>
-            <div class="dre-row"><span>(=) Receita Líquida</span><span id="outRecLiq">R$ 90.000,00</span></div>
-            <div class="dre-row"><span>(-) Custos Variáveis</span><span id="outCustoVar">R$ 35.000,00</span></div>
-            <div class="dre-row total"><span>(=) Margem de Contribuição</span><span id="outMargemCont">R$ 55.000,00</span></div>
-            <div class="dre-row"><span>(-) Despesas Fixas</span><span id="outDespFixas">R$ 40.000,00</span></div>
-            <div class="dre-row total"><span>(=) Lucro Líquido</span><span id="outLucroLiq">R$ 15.000,00</span></div>
-            <div class="dre-row" style="margin-top:8px; border-top:1px dashed rgba(255,255,255,.2); padding-top:8px;">
-              <span>Margem Líquida %</span><span id="outMargemLiqPct" style="color:var(--teal-light)">15.00%</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+  lucro_bruto = receita_bruta - custos
+  resultado_liquido = lucro_bruto - despesas
 
-  <!-- PILARES -->
-  <section class="page" id="pilares" data-title="Pilares">
-    <div class="page-inner">
-      <p class="kicker">Página 3 · Os 4 pilares</p>
-      <h2>Os 4 pilares da DRE gerencial</h2>
-      <p>Toque em cada cartão para ver o conceito completo.</p>
+  st.metric("Receita Bruta", f"R$ {receita_bruta:,.2f}")
+  st.metric("(-) Custos Operacionais", f"R$ {custos:,.2f}")
+  st.metric("(=) Lucro Bruto", f"R$ {lucro_bruto:,.2f}")
+  st.metric("(-) Despesas Administrativas", f"R$ {despesas:,.2f}")
 
-      <div class="pillar-grid">
-        <div class="pillar">
-          <div class="pillar-inner">
-            <div class="pillar-face pillar-front">
-              <div class="p-eyebrow">Pilar 1</div>
-              <div class="p-name">Margem de Contribuição</div>
-              <div class="p-hint">toque para ver →</div>
-            </div>
-            <div class="pillar-face pillar-back">O que sobra da receita após deduzir impostos, comissões e custos variáveis diretos. É o indicador que realmente mostra se o produto paga suas contas e gera lucro.</div>
-          </div>
-        </div>
-        <div class="pillar">
-          <div class="pillar-inner">
-            <div class="pillar-face pillar-front">
-              <div class="p-eyebrow">Pilar 2</div>
-              <div class="p-name">Custos Fixos vs. Variáveis</div>
-              <div class="p-hint">toque para ver →</div>
-            </div>
-            <div class="pillar-face pillar-back">Clareza absoluta entre o que oscila com o volume de vendas (variável) e o que você paga independentemente de faturar ou não, como aluguel e sistemas (fixo).</div>
-          </div>
-        </div>
-        <div class="pillar">
-          <div class="pillar-inner">
-            <div class="pillar-face pillar-front">
-              <div class="p-eyebrow">Pilar 3</div>
-              <div class="p-name">EBITDA (LAJIDA)</div>
-              <div class="p-hint">toque para ver →</div>
-            </div>
-            <div class="pillar-face pillar-back">Lucro antes de juros, impostos, depreciação e amortização. Mede puramente a capacidade de geração de caixa da operação do negócio, isolando decisões financeiras.</div>
-          </div>
-        </div>
-        <div class="pillar">
-          <div class="pillar-inner">
-            <div class="pillar-face pillar-front">
-              <div class="p-eyebrow">Pilar 4</div>
-              <div class="p-name">Ponto de Equilíbrio</div>
-              <div class="p-hint">toque para ver →</div>
-            </div>
-            <div class="pillar-face pillar-back">O faturamento exato que a empresa precisa atingir para cobrir todos os custos e despesas, ficando com lucro zero. Saber esse número elimina surpresas no fim do mês.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
+  cor_resultado = "normal" if resultado_liquido >= 0 else "inverse"
+  st.metric(
+      "(=) Resultado Líquido",
+      f"R$ {resultado_liquido:,.2f}",
+      delta=("Lucro" if resultado_liquido >= 0 else "Prejuízo"),
+      delta_color=cor_resultado,
+  )
 
-  <!-- MATRIZ -->
-  <section class="page" id="matriz" data-title="Estrutura">
-    <div class="page-inner">
-      <p class="kicker">Página 4 · Estrutura padrão</p>
-      <h2>Anatomia de uma DRE gerencial impecável</h2>
-
-      <div class="matrix-wrap">
-        <table>
-          <thead>
-            <tr><th>Linha da DRE</th><th>O que contém</th><th>Objetivo gerencial</th></tr>
-          </thead>
-          <tbody>
-            <tr><td>(=) Receita Bruta</td><td>Faturamento total emitido e recebido no período</td><td>Medir o volume bruto de negócios gerado</td></tr>
-            <tr><td>(-) Deduções da Receita</td><td>Impostos sobre faturamento, devoluções e abatimentos</td><td>Identificar a receita efetivamente disponível</td></tr>
-            <tr><td>(=) Receita Líquida</td><td>Receita Bruta menos as deduções fiscais</td><td>Base real para cálculo de margens e custos</td></tr>
-            <tr><td>(-) CMV / CSV</td><td>Custo das Mercadorias / Serviços Vendidos</td><td>Avaliar o custo direto de entrega do produto</td></tr>
-            <tr><td>(=) Margem de Contribuição</td><td>Receita Líquida menos Custos Variáveis</td><td>Verificar quanto sobra para cobrir a estrutura</td></tr>
-            <tr><td>(-) Despesas Operacionais</td><td>Despesas Administrativas, Comerciais e Fixas</td><td>Controlar o peso da estrutura administrativa</td></tr>
-            <tr><td>(=) Lucro Líquido</td><td>Resultado final após tributos e juros</td><td>Definir o valor gerado para reinvestimento ou sócios</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </section>
-
-  <!-- CTA / WHATSAPP -->
-  <section class="page" id="cta" data-title="WhatsApp">
-    <div class="page-inner">
-      <p class="kicker">Página 5 · Atendimento direto</p>
-      <h2>Fale com a IUS Contabilidade no WhatsApp</h2>
-      <p class="cta-note">Tire dúvidas sobre a DRE da sua empresa, envie seus relatórios ou solicite assessoria contábil completa com nossa equipe especializada.</p>
-      
-      <a class="whatsapp-btn" href="https://wa.me/553171953242?text=Olá,%20gostaria%20de%20ajuda%20com%20a%20estruturação%20da%20DRE%20da%20minha%20empresa." target="_blank" rel="noopener noreferrer">
-        <svg viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
-        <span>Chamar no WhatsApp: (31) 7195-3242</span>
-      </a>
-
-      <div class="cta-foot">
-        IUS Contabilidade · Belo Horizonte/MG · Conteúdo educativo — clareza financeira e segurança estratégica.
-        <div class="signature">IUS Contabilidade — clareza fiscal, decisão com segurança.</div>
-      </div>
-    </div>
-  </section>
-
-</div>
-
-<script>
-(function(){
-  var pages = Array.prototype.slice.call(document.querySelectorAll('.page'));
-  var nav = document.getElementById('pagenav');
-  var counter = document.getElementById('pagecounter');
-  var book = document.getElementById('book');
-
-  pages.forEach(function(p, i){
-    var b = document.createElement('button');
-    b.setAttribute('aria-label', p.dataset.title || ('Página ' + (i+1)));
-    b.addEventListener('click', function(){ p.scrollIntoView({behavior:'smooth'}); });
-    nav.appendChild(b);
-  });
-  var dots = Array.prototype.slice.call(nav.querySelectorAll('button'));
-
-  function setActive(){
-    var mid = book.scrollTop + book.clientHeight/2;
-    var idx = 0;
-    pages.forEach(function(p, i){
-      if(p.offsetTop <= mid) idx = i;
-    });
-    dots.forEach(function(d,i){ d.classList.toggle('active', i===idx); });
-    counter.innerHTML = 'Página <b>' + (idx+1) + '</b> de ' + pages.length;
-  }
-  book.addEventListener('scroll', setActive, {passive:true});
-  setActive();
-
-  // keyboard nav
-  document.addEventListener('keydown', function(e){
-    var mid = book.scrollTop + book.clientHeight/2;
-    var idx = 0;
-    pages.forEach(function(p,i){ if(p.offsetTop <= mid) idx = i; });
-    if(e.key === 'ArrowDown' || e.key === 'PageDown'){
-      e.preventDefault();
-      if(pages[idx+1]) pages[idx+1].scrollIntoView({behavior:'smooth'});
-    } else if(e.key === 'ArrowUp' || e.key === 'PageUp'){
-      e.preventDefault();
-      if(pages[idx-1]) pages[idx-1].scrollIntoView({behavior:'smooth'});
-    }
-  });
-
-  // ---- Construtor & Importador de DRE ----
-  var inpReceita = document.getElementById('inpReceita');
-  var inpImpostos = document.getElementById('inpImpostos');
-  var inpCustoVar = document.getElementById('inpCustoVar');
-  var inpDespFixas = document.getElementById('inpDespFixas');
-
-  var outReceita = document.getElementById('outReceita');
-  var outImpostos = document.getElementById('outImpostos');
-  var outRecLiq = document.getElementById('outRecLiq');
-  var outCustoVar = document.getElementById('outCustoVar');
-  var outMargemCont = document.getElementById('outMargemCont');
-  var outDespFixas = document.getElementById('outDespFixas');
-  var outLucroLiq = document.getElementById('outLucroLiq');
-  var outMargemLiqPct = document.getElementById('outMargemLiqPct');
-
-  var fileDominio = document.getElementById('fileDominio');
-  var labelDominio = document.getElementById('labelDominio');
-  var statusDominio = document.getElementById('statusDominio');
-  var btnProcessarDominio = document.getElementById('btnProcessarDominio');
-  var btnLimparDominio = document.getElementById('btnLimparDominio');
-
-  var fileExtrato = document.getElementById('fileExtrato');
-  var labelExtrato = document.getElementById('labelExtrato');
-  var statusExtrato = document.getElementById('statusExtrato');
-  var btnProcessarExtrato = document.getElementById('btnProcessarExtrato');
-  var btnLimparExtrato = document.getElementById('btnLimparExtrato');
-
-  function fmtBRL(val){
-    return 'R$ ' + val.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
-  }
-
-  function calcularDRE(){
-    var receita = parseFloat(inpReceita.value) || 0;
-    var impostos = parseFloat(inpImpostos.value) || 0;
-    var custoVar = parseFloat(inpCustoVar.value) || 0;
-    var despFixas = parseFloat(inpDespFixas.value) || 0;
-
-    var recLiq = receita - impostos;
-    var margemCont = recLiq - custoVar;
-    var lucroLiq = margemCont - despFixas;
-    var margemLiqPct = receita > 0 ? (lucroLiq / receita) * 100 : 0;
-
-    outReceita.textContent = fmtBRL(receita);
-    outImpostos.textContent = fmtBRL(impostos);
-    outRecLiq.textContent = fmtBRL(recLiq);
-    outCustoVar.textContent = fmtBRL(custoVar);
-    outMargemCont.textContent = fmtBRL(margemCont);
-    outDespFixas.textContent = fmtBRL(despFixas);
-    outLucroLiq.textContent = fmtBRL(lucroLiq);
-    outMargemLiqPct.textContent = margemLiqPct.toFixed(2) + '%';
-  }
-
-  [inpReceita, inpImpostos, inpCustoVar, inpDespFixas].forEach(function(el){
-    el.addEventListener('input', calcularDRE);
-  });
-
-  // Mostra nome do arquivo selecionado do Domínio
-  fileDominio.addEventListener('change', function(e){
-    if(e.target.files[0]){
-      labelDominio.textContent = '📄 ' + e.target.files[0].name;
-      statusDominio.textContent = 'Arquivo selecionado. Clique em "Processar Domínio".';
-    }
-  });
-
-  // Processar Relatório Domínio (Procura coluna de valor contábil/faturamento)
-  btnProcessarDominio.addEventListener('click', function(){
-    var file = fileDominio.files[0];
-    if(!file){
-      statusDominio.textContent = '⚠️ Nenhum arquivo selecionado.';
-      return;
-    }
-    var reader = new FileReader();
-    reader.onload = function(evt){
-      try {
-        var data = new Uint8Array(evt.target.result);
-        var workbook = XLSX.read(data, {type: 'array'});
-        var firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-        var json = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
-        
-        let somaReceita = 0;
-        let colIndex = -1;
-
-        // Tenta achar a coluna de valor/contábil pelo cabeçalho
-        if(json.length > 0) {
-          let header = json[0];
-          header.forEach((h, idx) => {
-            let hStr = String(h).toLowerCase();
-            if(hStr.includes('contábil') || hStr.includes('contabil') || hStr.includes('valor') || hStr.includes('total') || hStr.includes('venda')) {
-              colIndex = idx;
-            }
-          });
-        }
-
-        if(colIndex !== -1) {
-          for(let i = 1; i < json.length; i++) {
-            let val = parseFloat(String(json[i][colIndex]).replace(/\./g, '').replace(',', '.'));
-            if(!isNaN(val) && val > 0 && val < 10000000) somaReceita += val;
-          }
-        }
-
-        // Se não achou por cabeçalho, busca números realistas nas linhas
-        if(somaReceita === 0) {
-          json.forEach(row => {
-            row.forEach(cell => {
-              let num = parseFloat(String(cell).replace(/\./g, '').replace(',', '.'));
-              if(!isNaN(num) && num > 100 && num < 500000) somaReceita += num;
-            });
-          });
-        }
-
-        if(somaReceita > 0) {
-          inpReceita.value = Math.round(somaReceita);
-          inpImpostos.value = Math.round(somaReceita * 0.10);
-          statusDominio.textContent = '✔ Relatório do Domínio processado com sucesso!';
-        } else {
-          statusDominio.textContent = '⚠️ Não foi possível identificar a receita. Insira manualmente.';
-        }
-        calcularDRE();
-      } catch (err) {
-        statusDominio.textContent = '❌ Erro ao ler arquivo do Domínio.';
-      }
-    };
-    reader.readAsArrayBuffer(file);
-  });
-
-  btnLimparDominio.addEventListener('click', function(){
-    fileDominio.value = '';
-    labelDominio.textContent = '📁 Clique para selecionar relatório do Domínio (.xlsx/.csv)';
-    statusDominio.textContent = 'Dados limpos.';
-    inpReceita.value = 0;
-    inpImpostos.value = 0;
-    calcularDRE();
-  });
-
-  // Mostra nome do arquivo selecionado do Extrato
-  fileExtrato.addEventListener('change', function(e){
-    if(e.target.files[0]){
-      labelExtrato.textContent = '📄 ' + e.target.files[0].name;
-      statusExtrato.textContent = 'Extrato selecionado. Clique em "Processar Extrato".';
-    }
-  });
-
-  // Processar Extrato Bancário (Soma débitos/saídas)
-  btnProcessarExtrato.addEventListener('click', function(){
-    var file = fileExtrato.files[0];
-    if(!file){
-      statusExtrato.textContent = '⚠️ Nenhum extrato selecionado.';
-      return;
-    }
-    var reader = new FileReader();
-    reader.onload = function(evt){
-      try {
-        var data = new Uint8Array(evt.target.result);
-        var workbook = XLSX.read(data, {type: 'array'});
-        var firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-        var json = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
-        
-        let somaDespesas = 0;
-
-        json.forEach(row => {
-          let rowText = row.join(' ').toLowerCase();
-          // Identifica se é saída / débito / pagamento
-          let isSaida = rowText.includes('d') || rowText.includes('deb') || rowText.includes('déb') || rowText.includes('pg') || rowText.includes('pag') || rowText.includes('pix enviado');
-          
-          row.forEach(cell => {
-            if(cell !== null && cell !== undefined) {
-              let cleanStr = String(cell).replace(/\./g, '').replace(',', '.').trim();
-              let num = parseFloat(cleanStr);
-              // Filtra valores de transação válidos (< 500.000)
-              if(!isNaN(num) && num !== 0 && Math.abs(num) < 500000) {
-                if(num < 0 || isSaida) {
-                  somaDespesas += Math.abs(num);
-                }
-              }
-            }
-          });
-        });
-
-        // Fallback se não pegou pelo sinal ou texto
-        if(somaDespesas === 0) {
-          json.forEach(row => {
-            row.forEach(cell => {
-              let num = parseFloat(String(cell).replace(/\./g, '').replace(',', '.'));
-              if(!isNaN(num) && num > 0 && num < 100000) {
-                somaDespesas += num;
-              }
-            });
-          });
-          somaDespesas = somaDespesas / 2; // Estima metade como despesa caso venha misturado
-        }
-
-        if(somaDespesas > 0) {
-          let varShare = Math.round(somaDespesas * 0.4);
-          let fixShare = Math.round(somaDespesas * 0.6);
-          inpCustoVar.value = varShare;
-          inpDespFixas.value = fixShare;
-          statusExtrato.textContent = '✔ Extrato processado e despesas distribuídas!';
-        } else {
-          statusExtrato.textContent = '⚠️ Nenhuma despesa detectada. Ajuste manualmente.';
-        }
-        calcularDRE();
-      } catch (err) {
-        statusExtrato.textContent = '❌ Erro ao ler extrato bancário.';
-      }
-    };
-    reader.readAsArrayBuffer(file);
-  });
-
-  btnLimparExtrato.addEventListener('click', function(){
-    fileExtrato.value = '';
-    labelExtrato.textContent = '📁 Clique para selecionar o Extrato Bancário';
-    statusExtrato.textContent = 'Dados limpos.';
-    inpCustoVar.value = 0;
-    inpDespFixas.value = 0;
-    calcularDRE();
-  });
-
-  calcularDRE();
-
-  // ---- Pilares ----
-  document.querySelectorAll('.pillar').forEach(function(p){
-    p.addEventListener('click', function(){ p.classList.toggle('flip'); });
-  });
-})();
-</script>
-
-</body>
-</html>
+  st.markdown("---")
+  st.markdown("##### Resumo Estruturado da DRE")
+  dre_resumo = pd.DataFrame({
+      "Estrutura": [
+          "Receita Bruta",
+          "(-) Custos",
+          "(=) Lucro Bruto",
+          "(-) Despesas",
+          "(=) Resultado Líquido",
+      ],
+      "Total (R$)": [
+          receita_bruta,
+          -custos,
+          lucro_bruto,
+          -despesas,
+          resultado_liquido,
+      ],
+  })
+  st.dataframe(dre_resumo, hide_index=True, use_container_width=True)
