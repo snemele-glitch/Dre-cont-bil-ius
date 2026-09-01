@@ -3,98 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IUS Contabilidade - Revista DRE Interativa</title>
-    <!-- SheetJS para leitura e exportação de arquivos Excel e CSV -->
+    <title>IUS Contabilidade - DRE & Revista Executiva Interativa</title>
+    <!-- SheetJS para leitura e exportação de arquivos Excel, CSV e relatórios contábeis -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <style>
         :root {
-            --bg: #F4F5F7;
+            --bg: #F8FAFC;
             --surface: #FFFFFF;
-            --text: #1E293B;
+            --text: #0F172A;
             --text-muted: #64748B;
             --border: #E2E8F0;
             --danger: #E11D48;
             --success: #10B981;
-            --primary: #0A0F1D; /* Azul Corporativo IUS */
-            --accent: #C5A059;  /* Dourado IUS */
+            --primary: #0A0F1D; /* Azul profundo oficial IUS */
+            --accent: #C5A059;  /* Dourado sofisticado IUS */
             --accent-light: #FAF8F5;
-            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+            --card-shadow: 0 10px 25px -5px rgba(10, 15, 29, 0.05), 0 8px 10px -6px rgba(10, 15, 29, 0.05);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
-        body { background-color: var(--bg); color: var(--text); padding-bottom: 60px; line-height: 1.5; }
+        body { background-color: var(--bg); color: var(--text); padding-bottom: 60px; line-height: 1.6; }
 
-        /* Estilo Revista / Editorial Header */
+        /* Topo Editorial / Revista */
         header {
             background-color: var(--primary);
             color: #FFF;
             padding: 2.5rem 2rem;
             border-bottom: 4px solid var(--accent);
             position: relative;
-            overflow: hidden;
         }
 
-        header::after {
-            content: "";
-            position: absolute;
-            right: -50px;
-            bottom: -50px;
-            width: 200px;
-            height: 200px;
-            border: 2px solid rgba(197, 160, 89, 0.15);
-            border-radius: 50%;
-            pointer-events: none;
-        }
-
-        .header-content { max-width: 1000px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
+        .header-container { max-width: 1050px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
         .brand { display: flex; align-items: center; gap: 16px; }
         .brand-logo {
             border: 2px solid var(--accent);
             color: var(--accent);
             font-weight: 800;
-            padding: 8px 14px;
+            padding: 8px 16px;
             border-radius: 6px;
             letter-spacing: 2px;
-            font-size: 1.25rem;
-            background: rgba(197, 160, 89, 0.08);
+            font-size: 1.3rem;
+            background: rgba(197, 160, 89, 0.05);
         }
-        .brand-title { font-size: 1.4rem; font-weight: 700; letter-spacing: 1px; color: #FFFFFF; }
-        .magazine-tag {
-            background: rgba(255, 255, 255, 0.1);
+        .brand-title { font-size: 1.35rem; font-weight: 700; letter-spacing: 1px; color: #FFFFFF; }
+        .magazine-badge {
+            background: rgba(197, 160, 89, 0.15);
             color: var(--accent);
-            padding: 6px 14px;
-            border-radius: 20px;
+            padding: 8px 16px;
+            border-radius: 30px;
             font-size: 0.75rem;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
+            letter-spacing: 2px;
             font-weight: 700;
-            border: 1px solid rgba(197, 160, 89, 0.3);
+            border: 1px solid rgba(197, 160, 89, 0.4);
         }
 
-        .container { max-width: 1000px; margin: -25px auto 0 auto; padding: 0 20px; position: relative; z-index: 2; }
+        .container { max-width: 1050px; margin: -30px auto 0 auto; padding: 0 20px; position: relative; z-index: 2; }
 
-        /* Cartões estilo Revista (Artigos/Capítulos) */
+        /* Capítulos Estilo Revista Executiva */
         .card {
             background: var(--surface);
-            border-radius: 12px;
-            padding: 28px;
-            margin-bottom: 24px;
+            border-radius: 14px;
+            padding: 32px;
+            margin-bottom: 28px;
             border: 1px solid var(--border);
             box-shadow: var(--card-shadow);
-            transition: transform 0.2s ease;
         }
 
         .card-header-editorial {
             display: flex;
             align-items: baseline;
-            gap: 12px;
-            margin-bottom: 20px;
+            gap: 14px;
+            margin-bottom: 22px;
             border-bottom: 2px solid var(--bg);
-            padding-bottom: 12px;
+            padding-bottom: 14px;
         }
 
         .card-number {
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             font-weight: 800;
             color: var(--accent);
             letter-spacing: 1px;
@@ -104,52 +90,59 @@
             font-size: 1.15rem;
             color: var(--primary);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 1px;
             font-weight: 800;
         }
 
-        /* KPIs estilo Painel Executivo */
-        .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
-        .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px; box-shadow: var(--card-shadow); position: relative; overflow: hidden; }
+        /* KPIs Executivos */
+        .kpi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 28px; }
+        .kpi-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; box-shadow: var(--card-shadow); }
         .kpi-card.highlight { border-left: 5px solid var(--accent); background: linear-gradient(135deg, #FFFFFF 0%, var(--accent-light) 100%); }
-        .kpi-title { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 800; letter-spacing: 1px; margin-bottom: 8px; }
-        .kpi-value { font-size: 1.6rem; font-weight: 800; color: var(--text); }
+        .kpi-title { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 800; letter-spacing: 1.2px; margin-bottom: 8px; }
+        .kpi-value { font-size: 1.7rem; font-weight: 800; color: var(--text); }
         .kpi-value.gold { color: var(--accent); }
 
-        /* Área de Upload Estilo Editorial */
+        /* Abas de Importação (Extrato vs Relatório Domínio / Outros) */
+        .import-options { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 10px; }
+        @media(max-width: 768px) { .import-options { grid-template-columns: 1fr; } }
+
         .upload-zone {
-            border: 2px dashed var(--accent);
-            border-radius: 10px;
-            padding: 28px;
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 24px;
             text-align: center;
-            background: var(--accent-light);
+            background: #FAFAFA;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: all 0.2s ease;
         }
-        .upload-zone:hover { background: #F5EFEB; }
+        .upload-zone:hover { border-color: var(--accent); background: var(--accent-light); }
+        .upload-zone.primary-zone { border-color: var(--accent); background: var(--accent-light); }
 
         .btn {
             background: var(--primary);
             color: #FFF;
             border: none;
-            padding: 11px 20px;
+            padding: 12px 22px;
             border-radius: 8px;
             font-weight: 600;
-            font-size: 0.88rem;
+            font-size: 0.9rem;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             gap: 8px;
             transition: all 0.2s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 6px -1px rgba(10, 15, 29, 0.1);
         }
         .btn:hover { background: #1E293B; transform: translateY(-1px); }
 
         .btn-secondary { background: #E2E8F0; color: var(--text); box-shadow: none; }
         .btn-secondary:hover { background: #CBD5E1; }
 
-        /* Tabelas refinadas */
-        .table-container { overflow-x: auto; margin-top: 10px; }
+        .btn-gold { background: var(--accent); color: #FFF; }
+        .btn-gold:hover { background: #B38F4D; }
+
+        /* Tabelas Refinadas */
+        .table-container { overflow-x: auto; margin-top: 15px; }
         table { width: 100%; border-collapse: collapse; }
         th, td { padding: 14px 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
         th { background: #F8FAFC; font-weight: 700; color: var(--text-muted); text-transform: uppercase; font-size: 0.72rem; letter-spacing: 1px; }
@@ -160,7 +153,7 @@
         .dre-total { font-weight: 800; font-size: 1.1rem; background: var(--primary); color: #FFF; border-top: 3px solid var(--accent); }
         .dre-total td { color: #FFF !important; }
 
-        .actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; }
+        .actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px; }
 
         input[type="text"], select, input[type="number"] {
             border: 1px solid var(--border);
@@ -169,6 +162,7 @@
             font-size: 0.88rem;
             background: #FFF;
             color: var(--text);
+            width: 100%;
         }
         input[type="text"]:focus, select:focus, input[type="number"]:focus {
             outline: none;
@@ -178,7 +172,7 @@
 
         @media (max-width: 768px) {
             .kpi-grid { grid-template-columns: 1fr; }
-            .header-content { flex-direction: column; text-align: center; }
+            .header-container { flex-direction: column; text-align: center; }
             .brand { justify-content: center; }
         }
     </style>
@@ -186,21 +180,21 @@
 <body>
 
     <header>
-        <div class="header-content">
+        <div class="header-container">
             <div class="brand">
                 <div class="brand-logo">IUS</div>
                 <div>
                     <div class="brand-title">CONTABILIDADE</div>
-                    <div style="font-size: 0.8rem; color: #94A3B8; letter-spacing: 0.5px;">Inteligência Contábil Estratégica</div>
+                    <div style="font-size: 0.8rem; color: #94A3B8; letter-spacing: 0.5px;">Inteligência Contábil & Gestão Estratégica</div>
                 </div>
             </div>
-            <div class="magazine-tag">📖 Edição Interativa • DRE Executiva</div>
+            <div class="magazine-badge">📖 Revista DRE Interativa</div>
         </div>
     </header>
 
     <div class="container">
         
-        <!-- KPIs em destaque -->
+        <!-- KPIs Executivos -->
         <div class="kpi-grid">
             <div class="kpi-card">
                 <div class="kpi-title">Lucro Bruto Operacional</div>
@@ -212,51 +206,65 @@
             </div>
         </div>
 
-        <!-- Capítulo 1: Importação -->
+        <!-- Capítulo 1: Fontes de Dados (Extrato ou Domínio / Outros) -->
         <div class="card">
             <div class="card-header-editorial">
                 <span class="card-number">01</span>
-                <h2>Importação de Extrato Bancário</h2>
+                <h2>Fontes de Informação e Importação</h2>
             </div>
-            <div class="upload-zone" onclick="document.getElementById('inputExtrato').click()">
-                <p style="margin-bottom: 8px; font-weight: 700; color: var(--primary); font-size: 0.95rem;">📂 Clique ou arraste o arquivo Excel / CSV do extrato</p>
-                <p style="font-size: 0.8rem; color: var(--text-muted);">Suporte automático a planilhas bancárias e formatos tabulares</p>
-                <input type="file" id="inputExtrato" accept=".csv, .xlsx, .xls" style="display: none;">
+            <p style="font-size: 0.88rem; color: var(--text-muted); margin-bottom: 15px;">Escolha como deseja alimentar o painel gerencial:</p>
+            
+            <div class="import-options">
+                <!-- Opção 1: Extrato Bancário -->
+                <div class="upload-zone primary-zone" onclick="document.getElementById('inputExtrato').click()">
+                    <p style="font-weight: 700; color: var(--primary); margin-bottom: 6px;">📄 Extrato Bancário (CSV / Excel)</p>
+                    <p style="font-size: 0.78rem; color: var(--text-muted);">Ideal para conciliação direta das movimentações</p>
+                    <input type="file" id="inputExtrato" accept=".csv, .xlsx, .xls" style="display: none;">
+                </div>
+
+                <!-- Opção 2: Relatório Domínio / Balancete / Outros -->
+                <div class="upload-zone" onclick="document.getElementById('inputDominio').click()">
+                    <p style="font-weight: 700; color: var(--primary); margin-bottom: 6px;">📊 Relatório Domínio / Balancete / Outros</p>
+                    <p style="font-size: 0.78rem; color: var(--text-muted);">Importe planilhas geradas pelo sistema contábil</p>
+                    <input type="file" id="inputDominio" accept=".csv, .xlsx, .xls" style="display: none;">
+                </div>
             </div>
-            <div style="margin-top: 15px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+
+            <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <button class="btn btn-secondary" onclick="carregarExemplo()">⚡ Carregar Dados de Exemplo</button>
                 <button class="btn btn-secondary" onclick="limparTudo()">🗑️ Limpar Todos os Registros</button>
             </div>
         </div>
 
-        <!-- Capítulo 2: Classificação -->
+        <!-- Capítulo 2: Classificação e Edição Manual Interativa -->
         <div class="card">
             <div class="card-header-editorial" style="justify-content: space-between;">
-                <div style="display: flex; align-items: baseline; gap: 12px;">
+                <div style="display: flex; align-items: baseline; gap: 14px;">
                     <span class="card-number">02</span>
-                    <h2>Classificação de Lançamentos</h2>
+                    <h2>Classificação e Edição Manual Interativa</h2>
                 </div>
-                <button class="btn" onclick="adicionarLinhaManual()">+ Adicionar Item</button>
+                <button class="btn btn-gold" onclick="adicionarLinhaManual()">+ Adicionar Linha</button>
             </div>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 15px;">Edite livremente as descrições, altere as categorias na DRE ou ajuste valores em tempo real.</p>
             
             <div class="table-container">
                 <table id="tabelaLancamentos">
                     <thead>
                         <tr>
-                            <th>Descrição do Lançamento</th>
-                            <th>Categoria DRE</th>
+                            <th>Descrição do Lançamento / Conta</th>
+                            <th>Categoria na DRE</th>
                             <th class="amount">Valor (R$)</th>
-                            <th style="width: 40px; text-align: center;">Ação</th>
+                            <th style="width: 45px; text-align: center;">Ação</th>
                         </tr>
                     </thead>
                     <tbody id="bodyLancamentos">
-                        <!-- Dados gerados dinamicamente -->
+                        <!-- Gerado dinamicamente -->
                     </tbody>
                 </table>
             </div>
         </div>
 
-        <!-- Capítulo 3: DRE Consolidada -->
+        <!-- Capítulo 3: DRE Consolidada Executiva -->
         <div class="card">
             <div class="card-header-editorial">
                 <span class="card-number">03</span>
@@ -265,7 +273,7 @@
             <div class="table-container">
                 <table id="tableDRE">
                     <tbody id="bodyDRE">
-                        <!-- DRE calculada -->
+                        <!-- Calculado em tempo real -->
                     </tbody>
                 </table>
             </div>
@@ -279,8 +287,17 @@
     <script>
         let lancamentos = [];
 
+        // Leitura de Extrato Bancário
         document.getElementById('inputExtrato').addEventListener('change', function(e) {
-            const file = e.target.files[0];
+            processarArquivo(e.target.files[0], 'extrato');
+        });
+
+        // Leitura de Relatório Domínio / Outros Sistemas
+        document.getElementById('inputDominio').addEventListener('change', function(e) {
+            processarArquivo(e.target.files[0], 'dominio');
+        });
+
+        function processarArquivo(file, tipo) {
             if (!file) return;
 
             const reader = new FileReader();
@@ -293,9 +310,10 @@
                 lancamentos = [];
 
                 rows.forEach(row => {
-                    const descricao = row['origem / destino'] || row['tipo'] || row['Descrição'] || row['historico'] || 'Lançamento';
+                    // Tenta capturar descrições comuns de extratos ou de sistemas contábeis (Domínio)
+                    const descricao = row['origem / destino'] || row['tipo'] || row['Descrição'] || row['historico'] || row['Descricao'] || row['Conta'] || 'Lançamento';
                     
-                    let valRaw = String(row['valor'] || row['Valor'] || row['valor_num'] || '0');
+                    let valRaw = String(row['valor'] || row['Valor'] || row['valor_num'] || row['Saldo'] || row['Movimento'] || '0');
                     const ehNegativo = valRaw.includes('-') || valRaw.includes('−');
                     let valLimpo = valRaw.replace(/[^0-9,.]/g, '').replace(',', '.');
                     let valorNum = parseFloat(valLimpo) || 0;
@@ -303,9 +321,25 @@
                     if (ehNegativo) valorNum = -Math.abs(valorNum);
 
                     let categoria = 'RECEITA';
-                    if (valorNum < 0) {
-                        categoria = 'DESPESA';
-                        valorNum = Math.abs(valorNum);
+                    if (tipo === 'dominio') {
+                        // Classificação inteligente aproximada para relatórios de balancete/Domínio
+                        const descUpper = String(descricao).toUpperCase();
+                        if (descUpper.includes('IMPOSTO') || descUpper.includes('DEDUÇÃO') || descUpper.includes('SIMPLES') || descUpper.includes('ISS')) {
+                            categoria = 'DEDUCAO';
+                        } else if (descUpper.includes('CUSTO') || descUpper.includes('MERCADORIA') || descUpper.includes('FORNECEDOR')) {
+                            categoria = 'CUSTO';
+                        } else if (descUpper.includes('DESPESA') || descUpper.includes('SALARIO') || descUpper.includes('ALUGUEL') || descUpper.includes('AGUA') || descUpper.includes('LUZ')) {
+                            categoria = 'DESPESA';
+                        } else if (valorNum < 0) {
+                            categoria = 'DESPESA';
+                            valorNum = Math.abs(valorNum);
+                        }
+                    } else {
+                        // Regra padrão extrato
+                        if (valorNum < 0) {
+                            categoria = 'DESPESA';
+                            valorNum = Math.abs(valorNum);
+                        }
                     }
 
                     lancamentos.push({ descricao, categoria, valor: valorNum });
@@ -316,7 +350,7 @@
             };
 
             reader.readAsBinaryString(file);
-        });
+        }
 
         function renderizarTabela() {
             const tbody = document.getElementById('bodyLancamentos');
@@ -325,16 +359,16 @@
             lancamentos.forEach((item, index) => {
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><input type="text" value="${item.descricao}" onchange="atualizarItem(${index}, 'descricao', this.value)" style="width: 100%;"></td>
+                    <td><input type="text" value="${item.descricao}" onchange="atualizarItem(${index}, 'descricao', this.value)"></td>
                     <td>
-                        <select onchange="atualizarItem(${index}, 'categoria', this.value)" style="width: 100%;">
+                        <select onchange="atualizarItem(${index}, 'categoria', this.value)">
                             <option value="RECEITA" ${item.categoria === 'RECEITA' ? 'selected' : ''}>Receita Operacional</option>
                             <option value="DEDUCAO" ${item.categoria === 'DEDUCAO' ? 'selected' : ''}>Deduções / Impostos</option>
                             <option value="CUSTO" ${item.categoria === 'CUSTO' ? 'selected' : ''}>Custos Operacionais</option>
                             <option value="DESPESA" ${item.categoria === 'DESPESA' ? 'selected' : ''}>Despesas Operacionais</option>
                         </select>
                     </td>
-                    <td class="amount"><input type="number" step="0.01" value="${item.valor}" onchange="atualizarItem(${index}, 'valor', parseFloat(this.value) || 0)" style="width: 110px; text-align: right;"></td>
+                    <td class="amount"><input type="number" step="0.01" value="${item.valor}" onchange="atualizarItem(${index}, 'valor', parseFloat(this.value) || 0)" style="text-align: right;"></td>
                     <td style="text-align: center;"><button onclick="removerItem(${index})" style="background: none; border: none; color: var(--danger); cursor: pointer; font-weight: bold; font-size: 1.1rem;" title="Remover">✕</button></td>
                 `;
                 tbody.appendChild(tr);
@@ -347,7 +381,7 @@
         }
 
         function adicionarLinhaManual() {
-            lancamentos.push({ descricao: 'Novo Item Gerencial', categoria: 'RECEITA', valor: 0 });
+            lancamentos.push({ descricao: 'Novo Lançamento Gerencial', categoria: 'RECEITA', valor: 0 });
             renderizarTabela();
             recalcularDRE();
         }
@@ -361,16 +395,17 @@
         function limparTudo() {
             lancamentos = [];
             document.getElementById('inputExtrato').value = '';
+            document.getElementById('inputDominio').value = '';
             renderizarTabela();
             recalcularDRE();
         }
 
         function carregarExemplo() {
             lancamentos = [
-                { descricao: 'Faturamento de Consultoria / Serviços', categoria: 'RECEITA', valor: 150000 },
-                { descricao: 'Impostos sobre Serviços (Simples Nacional / ISS)', categoria: 'DEDUCAO', valor: 12000 },
-                { descricao: 'Custos com Ferramentas e Nuvem', categoria: 'CUSTO', valor: 20200 },
-                { descricao: 'Folha de Pagamento, Pró-labore e Aluguel', categoria: 'DESPESA', valor: 49150 }
+                { descricao: 'Faturamento de Vendas / Serviços Digitais', categoria: 'RECEITA', valor: 180000 },
+                { descricao: 'Impostos s/ Faturamento (Simples Nacional)', categoria: 'DEDUCAO', valor: 14500 },
+                { descricao: 'Plataformas, Servidores e Ferramentas', categoria: 'CUSTO', valor: 18500 },
+                { descricao: 'Folha, Pró-labore, Marketing e Despesas', categoria: 'DESPESA', valor: 52000 }
             ];
             renderizarTabela();
             recalcularDRE();
@@ -400,37 +435,4 @@
             const resultadoLiquido = lucroBruto - despesa;
 
             document.getElementById('kpiLucroBruto').innerText = fmt(lucroBruto);
-            document.getElementById('kpiResultadoLiquido').innerText = `${fmt(resultadoLiquido)} (${pct(resultadoLiquido, receita)})`;
-
-            const bodyDRE = document.getElementById('bodyDRE');
-            bodyDRE.innerHTML = `
-                <tr class="dre-header"><td>(+) RECEITA OPERACIONAL BRUTA</td><td class="amount">${fmt(receita)}</td><td class="amount">100.0%</td></tr>
-                <tr><td style="padding-left: 1.8rem;">(-) DEDUÇÕES E IMPOSTOS SOBRE VENDAS</td><td class="amount">${fmt(deducao)}</td><td class="amount">${pct(deducao, receita)}</td></tr>
-                <tr class="dre-subtotal"><td>(=) RECEITA OPERACIONAL LÍQUIDA</td><td class="amount">${fmt(receitaLiquida)}</td><td class="amount">${pct(receitaLiquida, receita)}</td></tr>
-                <tr><td style="padding-left: 1.8rem;">(-) CUSTOS OPERACIONAIS DOS SERVIÇOS</td><td class="amount">${fmt(custo)}</td><td class="amount">${pct(custo, receita)}</td></tr>
-                <tr class="dre-subtotal"><td>(=) LUCRO BRUTO OPERACIONAL</td><td class="amount">${fmt(lucroBruto)}</td><td class="amount">${pct(lucroBruto, receita)}</td></tr>
-                <tr><td style="padding-left: 1.8rem;">(-) DESPESAS OPERACIONAIS E ADMINISTRATIVAS</td><td class="amount">${fmt(despesa)}</td><td class="amount">${pct(despesa, receita)}</td></tr>
-                <tr class="dre-total">
-                    <td>(=) RESULTADO LÍQUIDO DO EXERCÍCIO</td>
-                    <td class="amount">${fmt(resultadoLiquido)}</td>
-                    <td class="amount">${pct(resultadoLiquido, receita)}</td>
-                </tr>
-            `;
-        }
-
-        function exportarExcel() {
-            if (typeof XLSX === 'undefined') {
-                alert("Biblioteca SheetJS carregando...");
-                return;
-            }
-            const table = document.getElementById('tableDRE');
-            const wb = XLSX.utils.table_to_book(table, { sheet: "DRE Executiva IUS" });
-            XLSX.writeFile(wb, 'DRE_Revista_IUS_Contabilidade.xlsx');
-        }
-
-        document.addEventListener("DOMContentLoaded", function() {
-            recalcularDRE();
-        });
-    </script>
-</body>
-</html>
+            document.getElementById('kpiResultadoLiquido').innerTe
