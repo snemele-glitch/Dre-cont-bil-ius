@@ -138,8 +138,24 @@
   }
   .file-drop-zone:hover{ background:var(--ok-bg); }
   .file-drop-zone input{ display:none; }
-  .file-label{ font-size:13px; color:var(--navy); font-weight:600; display:block; }
+  .file-label{ font-size:13px; color:var(--navy); font-weight:600; display:block; word-break:break-all; }
   .file-hint{ font-size:11.5px; color:var(--ink-soft); margin-top:2px; }
+
+  .card-actions{
+    display:flex; gap:8px; margin-bottom:10px;
+  }
+  .btn-process{
+    flex:1; background:var(--teal); color:#fff; border:none; border-radius:4px;
+    padding:9px 14px; font-size:13px; font-weight:700; cursor:pointer;
+    transition:background .2s;
+  }
+  .btn-process:hover{ background:#227fa8; }
+  .btn-clear{
+    background:#e2e8f0; color:var(--ink); border:none; border-radius:4px;
+    padding:9px 14px; font-size:13px; font-weight:600; cursor:pointer;
+    transition:background .2s;
+  }
+  .btn-clear:hover{ background:#cbd5e1; }
 
   .fields-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
   @media (max-width:500px){ .fields-grid{ grid-template-columns:1fr; } }
@@ -177,7 +193,7 @@
   .dre-row span:last-child{ font-family:var(--serif); font-size:15px; }
   .dre-row.total span:last-child{ font-size:18px; color:var(--teal-light); }
   .import-status{
-    font-size:11.5px; color:var(--teal-light); margin-top:8px; font-style:italic; min-height:16px;
+    font-size:11.5px; color:var(--teal); margin-top:4px; font-style:italic; min-height:16px; font-weight:600;
   }
 
   /* ---------- PILARES ---------- */
@@ -239,8 +255,8 @@
   <section class="page" id="cover" data-title="Capa">
     <div class="page-inner">
       <p class="kicker">IUS Contabilidade · Importador & Simulador de DRE</p>
-      <h1>Domínio da DRE:<br><em>Importe relatórios, ajuste valores e gere seu resultado.</em></h1>
-      <p class="lede">Ferramenta interativa com importação de arquivos do Domínio (.xlsx/.csv), extratos bancários (.xlsx/.csv), edição manual e apuração instantânea da DRE gerencial.</p>
+      <h1>Domínio da DRE:<br><em>Importe relatórios, processe dados e gere seu resultado.</em></h1>
+      <p class="lede">Ferramenta interativa com importação de arquivos do Domínio (.xlsx/.csv), extratos bancários (.xlsx/.csv), botões dedicados de processamento e limpeza, além de apuração instantânea.</p>
       <span class="cover-tag">5 páginas interativas</span>
       <div class="scrolldown">role para começar ↓</div>
     </div>
@@ -250,8 +266,8 @@
   <section class="page" id="construtor" data-title="Importador & DRE">
     <div class="page-inner">
       <p class="kicker">Página 2 · Importador e Construtor de DRE</p>
-      <h2>Importe arquivos ou edite os valores manualmente</h2>
-      <p>Envie o relatório do Domínio (faturamento/CFOPs 5102/6201) e o extrato bancário (despesas), ou ajuste diretamente nos campos abaixo.</p>
+      <h2>Carregue, processe arquivos ou edite manualmente</h2>
+      <p>Selecione o arquivo do Domínio (vendas/CFOPs 5102 e 6201) e o extrato bancário (despesas), clique em <b>Processar</b> ou preencha/edite os valores diretamente.</p>
 
       <div class="builder-grid">
         <div class="builder-col">
@@ -259,13 +275,17 @@
           <div class="input-card">
             <h3>1. Relatório Domínio (Vendas / CFOPs)</h3>
             <div class="file-drop-zone" onclick="document.getElementById('fileDominio').click()">
-              <span class="file-label">📁 Clique para carregar Excel ou CSV do Domínio</span>
-              <span class="file-hint">Detecta automaticamente CFOPs 5102 e 6201 para somar na Receita Bruta</span>
+              <span class="file-label" id="labelDominio">📁 Clique para selecionar Excel ou CSV do Domínio</span>
+              <span class="file-hint">Varre CFOPs 5102 e 6201 para somar na Receita Bruta</span>
               <input type="file" id="fileDominio" accept=".xlsx, .xls, .csv">
             </div>
-            <div class="import-status" id="statusDominio">Nenhum arquivo de vendas importado. Usando valores manuais.</div>
+            <div class="card-actions">
+              <button type="button" class="btn-process" id="btnProcessarDominio">▶ Processar Arquivo</button>
+              <button type="button" class="btn-clear" id="btnLimparDominio">Limpar</button>
+            </div>
+            <div class="import-status" id="statusDominio">Nenhum arquivo carregado.</div>
             
-            <div class="fields-grid">
+            <div class="fields-grid" style="margin-top:10px;">
               <div class="field-group">
                 <label for="inpReceita">Receita Bruta (R$)</label>
                 <input type="number" id="inpReceita" value="100000" step="100">
@@ -281,13 +301,17 @@
           <div class="input-card">
             <h3>2. Extrato Bancário / Despesas (CSV ou Excel)</h3>
             <div class="file-drop-zone" onclick="document.getElementById('fileExtrato').click()">
-              <span class="file-label">📁 Clique para carregar extrato de despesas</span>
-              <span class="file-hint">Soma os lançamentos para atualizar Custos Variáveis e Despesas Fixas</span>
+              <span class="file-label" id="labelExtrato">📁 Clique para selecionar extrato de despesas</span>
+              <span class="file-hint">Soma lançamentos para atualizar Custos e Despesas Fixas</span>
               <input type="file" id="fileExtrato" accept=".xlsx, .xls, .csv">
             </div>
-            <div class="import-status" id="statusExtrato">Nenhum extrato importado. Usando valores manuais.</div>
+            <div class="card-actions">
+              <button type="button" class="btn-process" id="btnProcessarExtrato">▶ Processar Extrato</button>
+              <button type="button" class="btn-clear" id="btnLimparExtrato">Limpar</button>
+            </div>
+            <div class="import-status" id="statusExtrato">Nenhum extrato carregado.</div>
 
-            <div class="fields-grid">
+            <div class="fields-grid" style="margin-top:10px;">
               <div class="field-group">
                 <label for="inpCustoVar">(-) Custos Variáveis / CMV (R$)</label>
                 <input type="number" id="inpCustoVar" value="35000" step="100">
@@ -475,9 +499,16 @@
   var outMargemLiqPct = document.getElementById('outMargemLiqPct');
 
   var fileDominio = document.getElementById('fileDominio');
+  var labelDominio = document.getElementById('labelDominio');
   var statusDominio = document.getElementById('statusDominio');
+  var btnProcessarDominio = document.getElementById('btnProcessarDominio');
+  var btnLimparDominio = document.getElementById('btnLimparDominio');
+
   var fileExtrato = document.getElementById('fileExtrato');
+  var labelExtrato = document.getElementById('labelExtrato');
   var statusExtrato = document.getElementById('statusExtrato');
+  var btnProcessarExtrato = document.getElementById('btnProcessarExtrato');
+  var btnLimparExtrato = document.getElementById('btnLimparExtrato');
 
   function fmtBRL(val){
     return 'R$ ' + val.toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2});
@@ -508,10 +539,21 @@
     el.addEventListener('input', calcularDRE);
   });
 
-  // Parser para arquivo do Domínio (busca CFOP 5102, 6201 ou valores de venda/impostos)
+  // Mostra nome do arquivo selecionado do Domínio
   fileDominio.addEventListener('change', function(e){
-    var file = e.target.files[0];
-    if(!file) return;
+    if(e.target.files[0]){
+      labelDominio.textContent = '📄 ' + e.target.files[0].name;
+      statusDominio.textContent = 'Arquivo selecionado. Clique em "Processar Arquivo".';
+    }
+  });
+
+  // Botão Processar Domínio
+  btnProcessarDominio.addEventListener('click', function(){
+    var file = fileDominio.files[0];
+    if(!file){
+      statusDominio.textContent = '⚠️ Nenhum arquivo selecionado. Insira manualmente ou escolha um arquivo.';
+      return;
+    }
     var reader = new FileReader();
     reader.onload = function(evt){
       try {
@@ -521,12 +563,11 @@
         var rows = XLSX.utils.sheet_to_json(firstSheet, {header: 1});
         
         let somaVendas = 0;
-        let somaImpostos = 0;
         let encontrado = false;
 
         rows.forEach(row => {
           let rowStr = row.join(' ').toLowerCase();
-          // Verifica se contém CFOP 5102 ou 6201 ou termos de venda/faturamento
+          // Procura por CFOP 5102, 6201 ou termos de venda
           if(rowStr.includes('5102') || rowStr.includes('6201') || rowStr.includes('venda') || rowStr.includes('total')) {
             row.forEach(cell => {
               let num = parseFloat(cell);
@@ -539,12 +580,10 @@
         });
 
         if(encontrado && somaVendas > 0) {
-          // Se encontrou valores expressivos, atualiza
           inpReceita.value = Math.round(somaVendas);
-          inpImpostos.value = Math.round(somaVendas * 0.10); // estimativa padrão de 10% se não especificado
-          statusDominio.textContent = '✔ Arquivo do Domínio processado com sucesso! (CFOPs identificados)';
+          inpImpostos.value = Math.round(somaVendas * 0.10);
+          statusDominio.textContent = '✔ Relatório do Domínio processado (CFOPs identificados).';
         } else {
-          // Fallback: pega qualquer valor numérico grande da planilha
           let totalPlanilha = 0;
           rows.forEach(row => {
             row.forEach(cell => {
@@ -554,23 +593,44 @@
           });
           if(totalPlanilha > 0) {
             inpReceita.value = Math.round(totalPlanilha);
-            statusDominio.textContent = '✔ Arquivo importado. Receita ajustada pelo total detectado.';
+            statusDominio.textContent = '✔ Relatório processado pelo total detectado.';
           } else {
-            statusDominio.textContent = '⚠️ Arquivo lido, mas verifique os valores manualmente nos campos abaixo.';
+            statusDominio.textContent = '⚠️ Valores não detectados automaticamente. Edite manualmente.';
           }
         }
         calcularDRE();
       } catch (err) {
-        statusDominio.textContent = '❌ Erro ao ler arquivo. Você pode preencher manualmente.';
+        statusDominio.textContent = '❌ Erro ao ler arquivo. Preencha manualmente.';
       }
     };
     reader.readAsArrayBuffer(file);
   });
 
-  // Parser para Extrato / Despesas
+  // Botão Limpar Domínio
+  btnLimparDominio.addEventListener('click', function(){
+    fileDominio.value = '';
+    labelDominio.textContent = '📁 Clique para selecionar Excel ou CSV do Domínio';
+    statusDominio.textContent = 'Dados limpos.';
+    inpReceita.value = 0;
+    inpImpostos.value = 0;
+    calcularDRE();
+  });
+
+  // Mostra nome do arquivo selecionado do Extrato
   fileExtrato.addEventListener('change', function(e){
-    var file = e.target.files[0];
-    if(!file) return;
+    if(e.target.files[0]){
+      labelExtrato.textContent = '📄 ' + e.target.files[0].name;
+      statusExtrato.textContent = 'Extrato selecionado. Clique em "Processar Extrato".';
+    }
+  });
+
+  // Botão Processar Extrato
+  btnProcessarExtrato.addEventListener('click', function(){
+    var file = fileExtrato.files[0];
+    if(!file){
+      statusExtrato.textContent = '⚠️ Nenhum extrato selecionado. Insira manualmente ou escolha um arquivo.';
+      return;
+    }
     var reader = new FileReader();
     reader.onload = function(evt){
       try {
@@ -583,7 +643,6 @@
         rows.forEach(row => {
           row.forEach(cell => {
             let num = parseFloat(cell);
-            // Considera valores negativos ou lançamentos de despesa
             if(!isNaN(num) && num < 0) {
               somaDespesas += Math.abs(num);
             }
@@ -595,16 +654,26 @@
           let fixShare = Math.round(somaDespesas * 0.6);
           inpCustoVar.value = varShare;
           inpDespFixas.value = fixShare;
-          statusExtrato.textContent = '✔ Extrato processado! Despesas distribuídas entre Variáveis e Fixas.';
+          statusExtrato.textContent = '✔ Extrato processado e despesas distribuídas.';
         } else {
-          statusExtrato.textContent = '⚠️ Extrato lido, ajuste os valores manualmente se necessário.';
+          statusExtrato.textContent = '⚠️ Nenhuma despesa negativa detectada. Ajuste manualmente.';
         }
         calcularDRE();
       } catch (err) {
-        statusExtrato.textContent = '❌ Erro ao ler extrato. Preencha manualmente nos campos abaixo.';
+        statusExtrato.textContent = '❌ Erro ao ler extrato. Preencha manualmente.';
       }
     };
     reader.readAsArrayBuffer(file);
+  });
+
+  // Botão Limpar Extrato
+  btnLimparExtrato.addEventListener('click', function(){
+    fileExtrato.value = '';
+    labelExtrato.textContent = '📁 Clique para selecionar extrato de despesas';
+    statusExtrato.textContent = 'Dados limpos.';
+    inpCustoVar.value = 0;
+    inpDespFixas.value = 0;
+    calcularDRE();
   });
 
   calcularDRE();
